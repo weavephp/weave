@@ -1,0 +1,22 @@
+{
+	"name": "weavephp/weave",
+	"description": "Weave glue-framework Core",
+	"type": "package",
+	"version": "0.0.1",
+	"authors": [
+		{
+			"name": "Robert Goldsmith",
+			"email": "r.s.goldsmith@far-blue.co.uk"
+		}
+	],
+	"require": {
+		"php": ">=5.6.0",
+		"psr/http-message": "~1.0",
+		"psr/log": "~1.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"Weave\\": "src/"
+		}
+	}
+}
