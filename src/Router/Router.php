@@ -59,13 +59,17 @@ class Router
 	 * PSR7 middleware double-pass entrypoint.
 	 *
 	 * @param Request  $request  The PSR7 request.
-	 * @param mixed    $response Some form of PSR7-style response.
+	 * @param mixed    $response Some form of PSR7-style response or a PSR15 delegate.
 	 * @param callable $next     Some form of callable to the next pipeline entry.
 	 *
 	 * @return mixed Some form of PSR7-style Response.
 	 */
-	public function __invoke(Request $request, $response, $next)
+	public function __invoke(Request $request, $response, $next = null)
 	{
+		if (is_callable($response)) {
+			$next = $response;
+			$response = null;
+		}
 		$routeResponse = $this->_route($request, $response);
 
 		if ($routeResponse !== false) {
