@@ -34,9 +34,9 @@ interface MiddlewareAdaptorInterface
 	/**
 	 * Trigger execution of the supplied pipeline via the Middleware stack.
 	 *
-	 * @param mixed    $pipeline The stack of middleware definitions.
-	 * @param Request  $request  The PSR7 request.
-	 * @param Response $response The PSR7 response (for double-pass stacks).
+	 * @param mixed         $pipeline The stack of middleware definitions.
+	 * @param Request       $request  The PSR7 request.
+	 * @param Response|null $response The PSR7 response (for double-pass stacks).
 	 *
 	 * @return Response
 	 */

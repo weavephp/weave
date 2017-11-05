@@ -20,19 +20,13 @@ class Dispatch
 	use \Weave\Resolve\Resolve;
 
 	/**
-	 * The class instance resolver callable.
-	 *
-	 * @var callable
-	 */
-	protected $_resolver;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param callable $resolver A callable that can instantiate object instances from class strings.
 	 */
-	public function __construct(callable $resolver) {
-		$this->_resolver = $resolver;
+	public function __construct(callable $resolver)
+	{
+		$this->setResolver($resolver);
 	}
 
 	/**
@@ -61,7 +55,7 @@ class Dispatch
 			$request = $request->withAttribute('dispatch.handler', $secondaryHandler);
 		}
 
-		$dispatchable = $this->_resolve($handler);
+		$dispatchable = $this->resolve($handler);
 		$dispatchResponse = $dispatchable($request, $response);
 
 		if ($dispatchResponse !== false) {
@@ -83,7 +77,7 @@ class Dispatch
 	{
 		$handler = $request->getAttribute('dispatch.handler');
 
-		$dispatchable = $this->_resolve($handler);
+		$dispatchable = $this->resolve($handler);
 		$dispatchResponse = $dispatchable($request, $response);
 
 		if ($dispatchResponse !== false) {

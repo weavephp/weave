@@ -13,6 +13,25 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 trait Resolve
 {
 	/**
+	 * The class instance resolver callable.
+	 *
+	 * @var callable
+	 */
+	protected $resolver;
+
+	/**
+	 * Set the resolver.
+	 *
+	 * @param callable $resolver The resolver.
+	 *
+	 * @return null
+	 */
+	protected function setResolver(callable $resolver)
+	{
+		$this->resolver = $resolver;
+	}
+
+	/**
 	 * Attempt to convert a provided value into a callable.
 	 *
 	 * If the value isn't a string it is simply returned.
@@ -25,17 +44,17 @@ trait Resolve
 	 *
 	 * @return mixed Usually some form of callable.
 	 */
-	protected function _resolve($value)
+	protected function resolve($value)
 	{
 		if (is_string($value)) {
 			if (strpos($value, '|') !== false) {
-				return $this->_resolveMiddlewarePipeline($value);
+				return $this->resolveMiddlewarePipeline($value);
 			} elseif (strpos($value, '::') !== false) {
-				return $this->_resolveStatic($value);
+				return $this->resolveStatic($value);
 			} elseif (strpos($value, '->') !== false) {
-				return $this->_resolveInstanceMethod($value);
+				return $this->resolveInstanceMethod($value);
 			} else {
-				return $this->_resolveInvokable($value);
+				return $this->resolveInvokable($value);
 			}
 		} else {
 			return $value;
@@ -49,10 +68,10 @@ trait Resolve
 	 *
 	 * @return callable A callable that executes the middleware chain.
 	 */
-	protected function _resolveMiddlewarePipeline($value)
+	protected function resolveMiddlewarePipeline($value)
 	{
 		$value = strstr($value, '|', true);
-		$middleware = ($this->_resolver)(\Weave\Middleware\Middleware::class);
+		$middleware = ($this->resolver)(\Weave\Middleware\Middleware::class);
 		return function (Request $request, $response = null) use ($middleware, $value) {
 			return $middleware->chain($value, $request, $response);
 		};
@@ -65,7 +84,7 @@ trait Resolve
 	 *
 	 * @return callable A callable that executes the static method.
 	 */
-	protected function _resolveStatic($value)
+	protected function resolveStatic($value)
 	{
 		return \Closure::fromCallable($value);
 	}
@@ -77,10 +96,10 @@ trait Resolve
 	 *
 	 * @return callable A callable that executes the instance method.
 	 */
-	protected function _resolveInstanceMethod($value)
+	protected function resolveInstanceMethod($value)
 	{
 		$callable = explode('->', $value);
-		$callable[0] = ($this->_resolver)($callable[0]);
+		$callable[0] = ($this->resolver)($callable[0]);
 		return \Closure::fromCallable($callable);
 	}
 
@@ -91,8 +110,8 @@ trait Resolve
 	 *
 	 * @return callable The invokable class instance.
 	 */
-	protected function _resolveInvokable($value)
+	protected function resolveInvokable($value)
 	{
-		return ($this->_resolver)($value);
+		return ($this->resolver)($value);
 	}
 }

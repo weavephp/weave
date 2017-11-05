@@ -20,42 +20,42 @@ class Middleware
 	 *
 	 * @var MiddlewareAdaptorInterface
 	 */
-	protected $_adaptor;
+	protected $adaptor;
 
 	/**
 	 * The pipeline provider callable.
 	 *
 	 * @var callable
 	 */
-	protected $_pipelineProvider;
+	protected $pipelineProvider;
 
 	/**
 	 * The class instance resolver callable.
 	 *
 	 * @var callable
 	 */
-	protected $_resolver;
+	protected $resolver;
 
 	/**
 	 * The PSR7 request object factory.
 	 *
 	 * @var Http\RequestFactoryInterface
 	 */
-	protected $_requestFactory;
+	protected $requestFactory;
 
 	/**
 	 * The PSR7 response object factory.
 	 *
 	 * @var Http\ResponseFactoryInterface
 	 */
-	protected $_responseFactory;
+	protected $responseFactory;
 
 	/**
 	 * The PSR7 response emitter.
 	 *
 	 * @var Http\ResponseEmitterInterface
 	 */
-	protected $_emitter;
+	protected $emitter;
 
 	/**
 	 * Constructor.
@@ -75,16 +75,16 @@ class Middleware
 		Http\ResponseFactoryInterface $responseFactory,
 		Http\ResponseEmitterInterface $emitter
 	) {
-		$this->_adaptor = $adaptor;
-		$this->_pipelineProvider = $pipelineProvider;
-		$this->_resolver = $resolver;
-		$this->_requestFactory = $requestFactory;
-		$this->_responseFactory = $responseFactory;
-		$this->_emitter = $emitter;
+		$this->adaptor = $adaptor;
+		$this->pipelineProvider = $pipelineProvider;
+		$this->resolver = $resolver;
+		$this->requestFactory = $requestFactory;
+		$this->responseFactory = $responseFactory;
+		$this->emitter = $emitter;
 
-		$this->_adaptor->setResolver(
+		$this->adaptor->setResolver(
 			function ($value) {
-				return $this->_resolve($value);
+				return $this->resolve($value);
 			}
 		);
 	}
@@ -101,9 +101,9 @@ class Middleware
 	 */
 	public function execute($pipelineName = null)
 	{
-		$request = $this->_requestFactory->newIncomingRequest();
-		if ($this->_adaptor->isDoublePass()) {
-			$response = $this->_responseFactory->newResponse();
+		$request = $this->requestFactory->newIncomingRequest();
+		if ($this->adaptor->isDoublePass()) {
+			$response = $this->responseFactory->newResponse();
 		} else {
 			$response = null;
 		}
@@ -113,16 +113,16 @@ class Middleware
 	/**
 	 * Create and execute a named pipeline chaining from an existing Request/Response.
 	 *
-	 * @param string   $pipelineName The name of the pipeline to create.
-	 * @param Request  $request      The PSR7 request object.
-	 * @param Response $response     The PSR7 response object (for double-pass pipelines).
+	 * @param string        $pipelineName The name of the pipeline to create.
+	 * @param Request       $request      The PSR7 request object.
+	 * @param Response|null $response     The PSR7 response object (for double-pass pipelines).
 	 *
 	 * @return Response A PSR7 response.
 	 */
 	public function chain($pipelineName, Request $request, Response $response = null)
 	{
-		$pipeline = ($this->_pipelineProvider)($pipelineName);
-		return $this->_adaptor->executePipeline($pipeline, $request, $response);
+		$pipeline = ($this->pipelineProvider)($pipelineName);
+		return $this->adaptor->executePipeline($pipeline, $request, $response);
 	}
 
 	/**
@@ -134,7 +134,7 @@ class Middleware
 	 */
 	public function emit(Response $response)
 	{
-		$this->_emitter->emit($response);
+		$this->emitter->emit($response);
 	}
 
 	/**
@@ -151,10 +151,10 @@ class Middleware
 	 *
 	 * @return mixed
 	 */
-	protected function _resolve($value)
+	protected function resolve($value)
 	{
 		if (is_string($value)) {
-			return ($this->_resolver)($value);
+			return ($this->resolver)($value);
 		} else {
 			return $value;
 		}

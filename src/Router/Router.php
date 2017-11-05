@@ -6,6 +6,7 @@ declare(strict_types = 1);
 namespace Weave\Router;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
 /**
  * The Weave Router.
@@ -21,21 +22,14 @@ class Router
 	 *
 	 * @var RouterAdaptorInterface
 	 */
-	protected $_adaptor;
+	protected $adaptor;
 
 	/**
 	 * The route provider callable.
 	 *
 	 * @var callable
 	 */
-	protected $_routeProvider;
-
-	/**
-	 * The resolver callable.
-	 *
-	 * @var callable
-	 */
-	protected $_resolver;
+	protected $routeProvider;
 
 	/**
 	 * Constructor.
@@ -50,9 +44,9 @@ class Router
 		callable $routeProvider,
 		callable $resolver
 	) {
-		$this->_adaptor = $adaptor;
-		$this->_routeProvider = $routeProvider;
-		$this->_resolver = $resolver;
+		$this->adaptor = $adaptor;
+		$this->routeProvider = $routeProvider;
+		$this->setResolver($resolver);
 	}
 
 	/**
@@ -70,7 +64,7 @@ class Router
 			$next = $response;
 			$response = null;
 		}
-		$routeResponse = $this->_route($request, $response);
+		$routeResponse = $this->route($request, $response);
 
 		if ($routeResponse !== false) {
 			return $routeResponse;
@@ -89,7 +83,7 @@ class Router
 	 */
 	public function process(Request $request, $next)
 	{
-		$routeResponse = $this->_route($request);
+		$routeResponse = $this->route($request);
 
 		if ($routeResponse !== false) {
 			return $routeResponse;
@@ -110,10 +104,10 @@ class Router
 	 *
 	 * @return Response|false Returns false if unable to route.
 	 */
-	protected function _route(Request $request, $response = null)
+	protected function route(Request $request, $response = null)
 	{
-		$this->_adaptor->configureRoutes($this->_routeProvider);
-		$routeDetails = $this->_adaptor->route($request);
+		$this->adaptor->configureRoutes($this->routeProvider);
+		$routeDetails = $this->adaptor->route($request);
 
 		if ($routeDetails === false) {
 			return false;
@@ -126,7 +120,7 @@ class Router
 			$request = $request->withAttribute('dispatch.handler', $secondaryHandler);
 		}
 
-		$dispatchable = $this->_resolve($handler);
+		$dispatchable = $this->resolve($handler);
 		return $dispatchable($request, $response);
 	}
 }
