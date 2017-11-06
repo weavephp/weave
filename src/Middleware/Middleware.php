@@ -30,11 +30,11 @@ class Middleware
 	protected $pipelineProvider;
 
 	/**
-	 * The class instance resolver callable.
+	 * The class instance instantiator callable.
 	 *
 	 * @var callable
 	 */
-	protected $resolver;
+	protected $instantiator;
 
 	/**
 	 * The PSR7 request object factory.
@@ -62,7 +62,7 @@ class Middleware
 	 *
 	 * @param MiddlewareAdaptorInterface    $adaptor          The middleware adaptor.
 	 * @param callable                      $pipelineProvider The pipeline provider.
-	 * @param callable                      $resolver         The resolver.
+	 * @param callable                      $instantiator     The instantiator.
 	 * @param Http\RequestFactoryInterface  $requestFactory   The PSR7 Request factory.
 	 * @param Http\ResponseFactoryInterface $responseFactory  The PSR7 Response factory.
 	 * @param Http\ResponseEmitterInterface $emitter          The PSR7 Response emitter.
@@ -70,14 +70,14 @@ class Middleware
 	public function __construct(
 		MiddlewareAdaptorInterface $adaptor,
 		callable $pipelineProvider,
-		callable $resolver,
+		callable $instantiator,
 		Http\RequestFactoryInterface $requestFactory,
 		Http\ResponseFactoryInterface $responseFactory,
 		Http\ResponseEmitterInterface $emitter
 	) {
 		$this->adaptor = $adaptor;
 		$this->pipelineProvider = $pipelineProvider;
-		$this->resolver = $resolver;
+		$this->instantiator = $instantiator;
 		$this->requestFactory = $requestFactory;
 		$this->responseFactory = $responseFactory;
 		$this->emitter = $emitter;
@@ -154,7 +154,7 @@ class Middleware
 	protected function resolve($value)
 	{
 		if (is_string($value)) {
-			return ($this->resolver)($value);
+			return ($this->instantiator)($value);
 		} else {
 			return $value;
 		}

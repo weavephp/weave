@@ -7,6 +7,7 @@ namespace Weave\Router;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Weave\Resolve\ResolveAdaptorInterface;
 
 /**
  * The Weave Router.
@@ -15,7 +16,12 @@ use Psr\Http\Message\ResponseInterface as Response;
  */
 class Router
 {
-	use \Weave\Resolve\Resolve;
+	/**
+	 * Resolver interface instance.
+	 *
+	 * @var ResolveAdaptorInterface
+	 */
+	protected $resolver;
 
 	/**
 	 * The Router adaptor instance.
@@ -36,17 +42,17 @@ class Router
 	 *
 	 * @param RouterAdaptorInterface $adaptor       The Router Adaptor.
 	 * @param callable               $routeProvider The route provider callable.
-	 * @param callable               $resolver      The resolver callable.
+	 * @param ResolveAdaptorInterface       $resolver      The resolver.
 
 	 */
 	public function __construct(
 		RouterAdaptorInterface $adaptor,
 		callable $routeProvider,
-		callable $resolver
+		ResolveAdaptorInterface $resolver
 	) {
 		$this->adaptor = $adaptor;
 		$this->routeProvider = $routeProvider;
-		$this->setResolver($resolver);
+		$this->resolver = $resolver;
 	}
 
 	/**
@@ -120,7 +126,7 @@ class Router
 			$request = $request->withAttribute('dispatch.handler', $secondaryHandler);
 		}
 
-		$dispatchable = $this->resolve($handler);
+		$dispatchable = $this->resolver->resolve($handler);
 		return $dispatchable($request, $response);
 	}
 }

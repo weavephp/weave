@@ -7,6 +7,7 @@ declare(strict_types = 1);
 namespace Weave\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Weave\Resolve\ResolveAdaptorInterface;
 
 /**
  * Weave PSR7 middleware Dispatcher.
@@ -17,16 +18,21 @@ use Psr\Http\Message\ServerRequestInterface as Request;
  */
 class Dispatch
 {
-	use \Weave\Resolve\Resolve;
+	/**
+	 * Resolver interface instance.
+	 *
+	 * @var ResolveAdaptorInterface
+	 */
+	protected $resolver;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param callable $resolver A callable that can instantiate object instances from class strings.
+	 * @param ResolveAdaptorInterface $resolver The resolver.
 	 */
-	public function __construct(callable $resolver)
+	public function __construct(ResolveAdaptorInterface $resolver)
 	{
-		$this->setResolver($resolver);
+		$this->resolver = $resolver;
 	}
 
 	/**
@@ -55,7 +61,7 @@ class Dispatch
 			$request = $request->withAttribute('dispatch.handler', $secondaryHandler);
 		}
 
-		$dispatchable = $this->resolve($handler);
+		$dispatchable = $this->resolver->resolve($handler);
 		$dispatchResponse = $dispatchable($request, $response);
 
 		if ($dispatchResponse !== false) {
@@ -77,7 +83,7 @@ class Dispatch
 	{
 		$handler = $request->getAttribute('dispatch.handler');
 
-		$dispatchable = $this->resolve($handler);
+		$dispatchable = $this->resolver->resolve($handler);
 		$dispatchResponse = $dispatchable($request, $response);
 
 		if ($dispatchResponse !== false) {

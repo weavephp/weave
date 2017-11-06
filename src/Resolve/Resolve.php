@@ -8,27 +8,25 @@ namespace Weave\Resolve;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 /**
- * Weave core resolver methods used by the Router and Dispatcher classes.
+ * Weave core resolver used by the Router and Dispatcher classes.
  */
-trait Resolve
+class Resolve implements ResolveAdaptorInterface
 {
 	/**
-	 * The class instance resolver callable.
+	 * The class instance instantiator callable.
 	 *
 	 * @var callable
 	 */
-	protected $resolver;
+	protected $instantiator;
 
 	/**
-	 * Set the resolver.
+	 * Constructor.
 	 *
-	 * @param callable $resolver The resolver.
-	 *
-	 * @return null
+	 * @param callable $instantiator The instantiator.
 	 */
-	protected function setResolver(callable $resolver)
+	public function __construct(callable $instantiator)
 	{
-		$this->resolver = $resolver;
+		$this->instantiator = $instantiator;
 	}
 
 	/**
@@ -44,7 +42,7 @@ trait Resolve
 	 *
 	 * @return mixed Usually some form of callable.
 	 */
-	protected function resolve($value)
+	public function resolve($value)
 	{
 		if (is_string($value)) {
 			if (strpos($value, '|') !== false) {
@@ -71,7 +69,7 @@ trait Resolve
 	protected function resolveMiddlewarePipeline($value)
 	{
 		$value = strstr($value, '|', true);
-		$middleware = ($this->resolver)(\Weave\Middleware\Middleware::class);
+		$middleware = ($this->instantiator)(\Weave\Middleware\Middleware::class);
 		return function (Request $request, $response = null) use ($middleware, $value) {
 			return $middleware->chain($value, $request, $response);
 		};
@@ -99,7 +97,7 @@ trait Resolve
 	protected function resolveInstanceMethod($value)
 	{
 		$callable = explode('->', $value);
-		$callable[0] = ($this->resolver)($callable[0]);
+		$callable[0] = ($this->instantiator)($callable[0]);
 		return \Closure::fromCallable($callable);
 	}
 
@@ -112,6 +110,6 @@ trait Resolve
 	 */
 	protected function resolveInvokable($value)
 	{
-		return ($this->resolver)($value);
+		return ($this->instantiator)($value);
 	}
 }
