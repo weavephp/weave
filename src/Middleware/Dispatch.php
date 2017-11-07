@@ -46,25 +46,33 @@ class Dispatch
 	 */
 	public function __invoke(Request $request, $response, $next = null)
 	{
+		// Cope with invoked single-pass and invoked double-pass middlewares
 		if (is_callable($response)) {
 			$next = $response;
 			$response = null;
 		}
 
+		// If there's nothing to dispatch, continue along the middleware pipeline
 		$handler = $request->getAttribute('dispatch.handler', false);
 		if ($handler === false) {
 			return $next($request, $response);
 		}
 
+		// Setup any remaining chained parts of the dispatch for future dispatch
 		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
+		// Resolve the handler into something callable
 		$dispatchable = $this->resolver->resolve($handler);
-		$dispatchResponse = $dispatchable($request, $response);
 
+		// Dispatch
+		$dispatchResponse = $this->dispatch($dispatchable, $request, $response);
+
+		// If something was returned then return back down the middleware
 		if ($dispatchResponse !== false) {
 			return $dispatchResponse;
 		}
 
+		// Otherwise keep going up the middleware pipeline
 		return $next($request, $response);
 	}
 
@@ -78,19 +86,48 @@ class Dispatch
 	 */
 	public function process(Request $request, $next)
 	{
-		$handler = $request->getAttribute('dispatch.handler');
+		// If there's nothing to dispatch, continue along the middleware pipeline
+		$handler = $request->getAttribute('dispatch.handler', false);
+		if ($handler === false) {
+			return $next($request);
+		}
 
+		// Setup any remaining chained parts of the dispatch for future dispatch
+		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
+
+		// Resolve the handler into something callable
 		$dispatchable = $this->resolver->resolve($handler);
-		$dispatchResponse = $dispatchable($request, $response);
 
+		// Dispatch
+		$dispatchResponse = $this->dispatch($dispatchable, $request);
+
+		// If something was returned then return back down the middleware
 		if ($dispatchResponse !== false) {
 			return $dispatchResponse;
 		}
 
+		// Otherwise keep going up the middleware pipeline
 		if (method_exists($next, 'handle')) {
 			return $next->handle($request);
 		} else {
 			return $next->process($request);
 		}
+	}
+
+	/**
+	 * Call the callable, providing request and response and returning the returned value.
+	 *
+	 * Override this method in subclasses to easily wrap the actual dispatch callable
+	 * and provide pre- and post-dispatch custom functionality.
+	 *
+	 * @param callable $dispatchable The callable to be called.
+	 * @param Request  $request      The request.
+	 * @param mixed    $response     Some form of PSR-7 response object or null.
+	 *
+	 * @return mixed Some form of PSR-7 style response.
+	 */
+	protected function dispatch($dispatchable, $request, $response = null)
+	{
+		return $dispatchable($request, $response);
 	}
 }

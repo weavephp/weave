@@ -73,6 +73,7 @@ class Router
 	 */
 	public function __invoke(Request $request, $response, $next = null)
 	{
+		// Cope with invoked single-pass and invoked double-pass middlewares
 		if (is_callable($response)) {
 			$next = $response;
 			$response = null;
