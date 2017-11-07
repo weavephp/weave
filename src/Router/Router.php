@@ -38,6 +38,13 @@ class Router
 	protected $routeProvider;
 
 	/**
+	 * Whether the routes have been configured.
+	 *
+	 * @var boolean
+	 */
+	protected $routesConfigured = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param RouterAdaptorInterface $adaptor       The Router Adaptor.
@@ -112,7 +119,11 @@ class Router
 	 */
 	protected function route(Request $request, $response = null)
 	{
-		$this->adaptor->configureRoutes($this->routeProvider);
+		if (!$this->routesConfigured) {
+			$this->adaptor->configureRoutes($this->routeProvider);
+			$this->routesConfigured = true;
+		}
+
 		$routeDetails = $this->adaptor->route($request);
 
 		if ($routeDetails === false) {
