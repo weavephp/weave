@@ -132,10 +132,7 @@ class Router
 
 		list($request, $handler) = $routeDetails;
 
-		if (is_string($handler) && strpos($handler, '|') !== false) {
-			$secondaryHandler = substr($handler, strpos($handler, '|') + 1);
-			$request = $request->withAttribute('dispatch.handler', $secondaryHandler);
-		}
+		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
 		$dispatchable = $this->resolver->resolve($handler);
 		return $dispatchable($request, $response);

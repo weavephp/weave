@@ -26,4 +26,19 @@ interface ResolveAdaptorInterface
 	 * @return mixed Usually some form of callable.
 	 */
 	public function resolve($value);
+
+	/**
+	 * Return the string of remaining dispatch steps with the first step removed (shifted).
+	 *
+	 * A dispatch string can contain multiple middleware pipe names separated by a '|' char
+	 * which can be progressively consumed by Dispatch middlewares. This method removes a
+	 * single dispatch pipeline step, returning the remaining string.
+	 *
+	 * If something other than a string is passed in then return an empty string.
+	 *
+	 * @param mixed $value The string of dispatch steps.
+	 *
+	 * @return string The string of remaining dispatch steps.
+	 */
+	public function shift($value);
 }

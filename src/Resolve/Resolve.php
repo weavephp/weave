@@ -30,6 +30,27 @@ class Resolve implements ResolveAdaptorInterface
 	}
 
 	/**
+	 * Return the string of remaining dispatch steps with the first step removed (shifted).
+	 *
+	 * A dispatch string can contain multiple middleware pipe names separated by a '|' char
+	 * which can be progressively consumed by Dispatch middlewares. This method removes a
+	 * single dispatch pipeline step, returning the remaining string.
+	 *
+	 * If something other than a string is passed in then return an empty string.
+	 *
+	 * @param mixed $value The string of dispatch steps.
+	 *
+	 * @return string The string of remaining dispatch steps.
+	 */
+	public function shift($value)
+	{
+		if (!is_string($value) || strpos($value, '|') === false) {
+			return '';
+		}
+		return substr($value, strpos($value, '|') + 1);
+	}
+
+	/**
 	 * Attempt to convert a provided value into a callable.
 	 *
 	 * If the value isn't a string it is simply returned.
