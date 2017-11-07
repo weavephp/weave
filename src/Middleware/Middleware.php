@@ -9,6 +9,7 @@ namespace Weave\Middleware;
 use Weave\Http;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Weave\Resolve\ResolveAdaptorInterface;
 
 /**
  * Middleware Pipeline adaptor manager.
@@ -28,13 +29,6 @@ class Middleware
 	 * @var callable
 	 */
 	protected $pipelineProvider;
-
-	/**
-	 * The class instance instantiator callable.
-	 *
-	 * @var callable
-	 */
-	protected $instantiator;
 
 	/**
 	 * The PSR7 request object factory.
@@ -62,7 +56,7 @@ class Middleware
 	 *
 	 * @param MiddlewareAdaptorInterface    $adaptor          The middleware adaptor.
 	 * @param callable                      $pipelineProvider The pipeline provider.
-	 * @param callable                      $instantiator     The instantiator.
+	 * @param ResolveAdaptorInterface       $resolver         The resolver.
 	 * @param Http\RequestFactoryInterface  $requestFactory   The PSR7 Request factory.
 	 * @param Http\ResponseFactoryInterface $responseFactory  The PSR7 Response factory.
 	 * @param Http\ResponseEmitterInterface $emitter          The PSR7 Response emitter.
@@ -70,21 +64,20 @@ class Middleware
 	public function __construct(
 		MiddlewareAdaptorInterface $adaptor,
 		callable $pipelineProvider,
-		callable $instantiator,
+		ResolveAdaptorInterface $resolver,
 		Http\RequestFactoryInterface $requestFactory,
 		Http\ResponseFactoryInterface $responseFactory,
 		Http\ResponseEmitterInterface $emitter
 	) {
 		$this->adaptor = $adaptor;
 		$this->pipelineProvider = $pipelineProvider;
-		$this->instantiator = $instantiator;
 		$this->requestFactory = $requestFactory;
 		$this->responseFactory = $responseFactory;
 		$this->emitter = $emitter;
 
 		$this->adaptor->setResolver(
-			function ($value) {
-				return $this->resolve($value);
+			function ($value) use ($resolver) {
+				return $resolver->resolve($value);
 			}
 		);
 	}
@@ -135,28 +128,5 @@ class Middleware
 	public function emit(Response $response)
 	{
 		$this->emitter->emit($response);
-	}
-
-	/**
-	 * Resolve a class string to a callable.
-	 *
-	 * If the value provided is a string and can be resolved to a class instance then
-	 * the class instance is resolved and returned. The class instance should behave
-	 * as to match the type of pipeline adaptor in use - single- or double-pass.
-	 *
-	 * If the value is provided isn't a string it is simply returned (so you can
-	 * provide closures and existing class instances in a pipeline definition).
-	 *
-	 * @param mixed $value The value that might need resolving.
-	 *
-	 * @return mixed
-	 */
-	protected function resolve($value)
-	{
-		if (is_string($value)) {
-			return ($this->instantiator)($value);
-		} else {
-			return $value;
-		}
 	}
 }
