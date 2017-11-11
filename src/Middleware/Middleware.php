@@ -10,6 +10,7 @@ use Weave\Http;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Weave\Resolve\ResolveAdaptorInterface;
+use Weave\Dispatch\DispatchAdaptorInterface;
 
 /**
  * Middleware Pipeline adaptor manager.
@@ -57,6 +58,7 @@ class Middleware
 	 * @param MiddlewareAdaptorInterface    $adaptor          The middleware adaptor.
 	 * @param callable                      $pipelineProvider The pipeline provider.
 	 * @param ResolveAdaptorInterface       $resolver         The resolver.
+	 * @param DispatchAdaptorInterface      $dispatcher       The dispatcher.
 	 * @param Http\RequestFactoryInterface  $requestFactory   The PSR7 Request factory.
 	 * @param Http\ResponseFactoryInterface $responseFactory  The PSR7 Response factory.
 	 * @param Http\ResponseEmitterInterface $emitter          The PSR7 Response emitter.
@@ -65,6 +67,7 @@ class Middleware
 		MiddlewareAdaptorInterface $adaptor,
 		callable $pipelineProvider,
 		ResolveAdaptorInterface $resolver,
+		DispatchAdaptorInterface $dispatcher,
 		Http\RequestFactoryInterface $requestFactory,
 		Http\ResponseFactoryInterface $responseFactory,
 		Http\ResponseEmitterInterface $emitter
@@ -76,8 +79,16 @@ class Middleware
 		$this->emitter = $emitter;
 
 		$this->adaptor->setResolver(
-			function ($value) use ($resolver) {
-				return $resolver->resolve($value);
+			function ($value) use ($resolver, $dispatcher) {
+				$dispatchable = $resolver->resolve($value, $resolutionType);
+				return function (...$rest) use ($dispatchable, $dispatcher, $resolutionType) {
+					return $dispatcher->dispatch(
+						$dispatchable,
+						$resolutionType,
+						DispatchAdaptorInterface::SOURCE_MIDDLEWARE_STACK,
+						...$rest
+					);
+				};
 			}
 		);
 	}

@@ -8,6 +8,7 @@ namespace Weave\Router;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Weave\Resolve\ResolveAdaptorInterface;
+use Weave\Dispatch\DispatchAdaptorInterface;
 
 /**
  * The Weave Router.
@@ -22,6 +23,13 @@ class Router
 	 * @var ResolveAdaptorInterface
 	 */
 	protected $resolver;
+
+	/**
+	 * Dispatcher interface instance.
+	 *
+	 * @var DispatchAdaptorInterface
+	 */
+	protected $dispatcher;
 
 	/**
 	 * The Router adaptor instance.
@@ -47,19 +55,22 @@ class Router
 	/**
 	 * Constructor.
 	 *
-	 * @param RouterAdaptorInterface $adaptor       The Router Adaptor.
-	 * @param callable               $routeProvider The route provider callable.
-	 * @param ResolveAdaptorInterface       $resolver      The resolver.
+	 * @param RouterAdaptorInterface   $adaptor       The Router Adaptor.
+	 * @param callable                 $routeProvider The route provider callable.
+	 * @param ResolveAdaptorInterface  $resolver      The resolver.
+	 * @param DispatchAdaptorInterface $dispatcher    The dispatcher.
 
 	 */
 	public function __construct(
 		RouterAdaptorInterface $adaptor,
 		callable $routeProvider,
-		ResolveAdaptorInterface $resolver
-	) {
+		ResolveAdaptorInterface $resolver,
+		DispatchAdaptorInterface $dispatcher
+		) {
 		$this->adaptor = $adaptor;
 		$this->routeProvider = $routeProvider;
 		$this->resolver = $resolver;
+		$this->dispatcher = $dispatcher;
 	}
 
 	/**
@@ -135,7 +146,13 @@ class Router
 
 		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
-		$dispatchable = $this->resolver->resolve($handler);
-		return $dispatchable($request, $response);
+		$dispatchable = $this->resolver->resolve($handler, $resolutionType);
+		return $this->dispatcher->dispatch(
+			$dispatchable,
+			$resolutionType,
+			DispatchAdaptorInterface::SOURCE_ROUTER,
+			$request,
+			$response
+		);
 	}
 }

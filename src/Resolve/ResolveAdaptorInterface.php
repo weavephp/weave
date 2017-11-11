@@ -13,6 +13,15 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 interface ResolveAdaptorInterface
 {
 	/**
+	 * Consts representing what kind of resolution was performed.
+	 */
+	const TYPE_PIPELINE = 'pipeline';
+	const TYPE_STATIC = 'static';
+	const TYPE_INSTANCE = 'instance';
+	const TYPE_INVOKE = 'invoke';
+	const TYPE_ORIGINAL = 'original';
+
+	/**
 	 * Attempt to convert a provided value into a callable.
 	 *
 	 * If the value isn't a string it is simply returned.
@@ -21,11 +30,12 @@ interface ResolveAdaptorInterface
 	 * If the string value contains '->' treat it as an instance method call.
 	 * Otherwise, attempt to treat it as an invokable.
 	 *
-	 * @param mixed $value The value to resolve. Usually a string or callable.
+	 * @param mixed  $value           The value to resolve. Usually a string or callable.
+	 * @param string &$resolutionType Set to the type of resolution identified.
 	 *
 	 * @return mixed Usually some form of callable.
 	 */
-	public function resolve($value);
+	public function resolve($value, &$resolutionType);
 
 	/**
 	 * Return the string of remaining dispatch steps with the first step removed (shifted).

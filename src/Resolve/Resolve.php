@@ -59,23 +59,29 @@ class Resolve implements ResolveAdaptorInterface
 	 * If the string value contains '->' treat it as an instance method call.
 	 * Otherwise, attempt to treat it as an invokable.
 	 *
-	 * @param mixed $value The value to resolve. Usually a string or callable.
+	 * @param mixed  $value           The value to resolve. Usually a string or callable.
+	 * @param string &$resolutionType Set to the type of resolution identified.
 	 *
 	 * @return mixed Usually some form of callable.
 	 */
-	public function resolve($value)
+	public function resolve($value, &$resolutionType)
 	{
 		if (is_string($value)) {
 			if (strpos($value, '|') !== false) {
+				$resolutionType = ResolveAdaptorInterface::TYPE_PIPELINE;
 				return $this->resolveMiddlewarePipeline($value);
 			} elseif (strpos($value, '::') !== false) {
+				$resolutionType = ResolveAdaptorInterface::TYPE_STATIC;
 				return $this->resolveStatic($value);
 			} elseif (strpos($value, '->') !== false) {
+				$resolutionType = ResolveAdaptorInterface::TYPE_INSTANCE;
 				return $this->resolveInstanceMethod($value);
 			} else {
+				$resolutionType = ResolveAdaptorInterface::TYPE_INVOKE;
 				return $this->resolveInvokable($value);
 			}
 		} else {
+			$resolutionType = ResolveAdaptorInterface::TYPE_ORIGINAL;
 			return $value;
 		}
 	}

@@ -8,6 +8,7 @@ namespace Weave\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Weave\Resolve\ResolveAdaptorInterface;
+use Weave\Dispatch\DispatchAdaptorInterface;
 
 /**
  * Weave PSR7 middleware Dispatcher.
@@ -26,13 +27,24 @@ class Dispatch
 	protected $resolver;
 
 	/**
+	 * Dispatcher interface instance.
+	 *
+	 * @var DispatchAdaptorInterface
+	 */
+	protected $dispatcher;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param ResolveAdaptorInterface $resolver The resolver.
+	 * @param ResolveAdaptorInterface  $resolver   The resolver.
+	 * @param DispatchAdaptorInterface $dispatcher The dispatcher.
 	 */
-	public function __construct(ResolveAdaptorInterface $resolver)
-	{
+	public function __construct(
+		ResolveAdaptorInterface $resolver,
+		DispatchAdaptorInterface $dispatcher
+	) {
 		$this->resolver = $resolver;
+		$this->dispatcher = $dispatcher;
 	}
 
 	/**
@@ -62,10 +74,16 @@ class Dispatch
 		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
 		// Resolve the handler into something callable
-		$dispatchable = $this->resolver->resolve($handler);
+		$dispatchable = $this->resolver->resolve($handler, $resolutionType);
 
 		// Dispatch
-		$dispatchResponse = $this->dispatch($dispatchable, $request, $response);
+		$dispatchResponse = $this->dispatcher->dispatch(
+			$dispatchable,
+			$resolutionType,
+			DispatchAdaptorInterface::SOURCE_DISPATCH_MIDDLEWARE,
+			$request,
+			$response
+		);
 
 		// If something was returned then return back down the middleware
 		if ($dispatchResponse !== false) {
@@ -96,10 +114,14 @@ class Dispatch
 		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
 		// Resolve the handler into something callable
-		$dispatchable = $this->resolver->resolve($handler);
+		$dispatchable = $this->resolver->resolve($handler, $resolutionType);
 
 		// Dispatch
-		$dispatchResponse = $this->dispatch($dispatchable, $request);
+		$dispatchResponse = $this->dispatcher->dispatch(
+			$dispatchable,
+			$resolutionType,
+			DispatchAdaptorInterface::SOURCE_DISPATCH_MIDDLEWARE,
+			$request);
 
 		// If something was returned then return back down the middleware
 		if ($dispatchResponse !== false) {
@@ -112,22 +134,5 @@ class Dispatch
 		} else {
 			return $next->process($request);
 		}
-	}
-
-	/**
-	 * Call the callable, providing request and response and returning the returned value.
-	 *
-	 * Override this method in subclasses to easily wrap the actual dispatch callable
-	 * and provide pre- and post-dispatch custom functionality.
-	 *
-	 * @param callable $dispatchable The callable to be called.
-	 * @param Request  $request      The request.
-	 * @param mixed    $response     Some form of PSR-7 response object or null.
-	 *
-	 * @return mixed Some form of PSR-7 style response.
-	 */
-	protected function dispatch($dispatchable, $request, $response = null)
-	{
-		return $dispatchable($request, $response);
 	}
 }
