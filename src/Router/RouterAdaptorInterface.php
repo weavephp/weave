@@ -24,15 +24,11 @@ interface RouterAdaptorInterface
 	/**
 	 * Route the supplied request.
 	 *
-	 * The method should return an array with 2 values. The first is a Request
-	 * object with any additional attributes applied. The second is something
-	 * dispatchable - a callable or a string that can be resolved to a callable.
-	 *
 	 * If the Request can't be routed, return false.
 	 *
-	 * @param Request $request The PSR7 request to attempt to route.
+	 * @param Request &$request The PSR7 request to attempt to route.
 	 *
-	 * @return false|array[Request, string|callable]
+	 * @return false|string|callable
 	 */
-	public function route(Request $request);
+	public function route(Request &$request);
 }

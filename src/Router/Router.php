@@ -136,13 +136,11 @@ class Router
 			$this->routesConfigured = true;
 		}
 
-		$routeDetails = $this->adaptor->route($request);
+		$handler = $this->adaptor->route($request);
 
-		if ($routeDetails === false) {
+		if ($handler === false) {
 			return false;
 		}
-
-		list($request, $handler) = $routeDetails;
 
 		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
