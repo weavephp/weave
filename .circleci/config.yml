@@ -32,7 +32,7 @@ jobs:
           
       - run:
           name: Create reports folder
-          command: mkdir -p /reports
+          command: mkdir -p /tmp/reports
           when: always
 
       - save_cache:
@@ -42,14 +42,14 @@ jobs:
         
       - run:
           name: Run Style Check
-          command: vendor/bin/phpcs --report=junit --report-file=/reports/codestyle-junit.xml
+          command: vendor/bin/phpcs --report=junit --report-file=/tmp/reports/codestyle-junit.xml
           
       #- run:
       #    name: Run Unit tests
-      #    command: phpunit --log-junit /reports/unittest-junit.xml
+      #    command: phpunit --log-junit /tmp/reports/unittest-junit.xml
       
       - store_test_results:
-          path: /reports
+          path: /tmp/reports
           
       - store_artifacts:
-          path: /reports
+          path: /tmp/reports
