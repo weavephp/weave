@@ -37,7 +37,7 @@ jobs:
         
       - run:
           name: Run CS tests
-          command: phpcs
+          command: vendor/bin/phpcs
           
       #- run:
       #    name: Run Unit tests
