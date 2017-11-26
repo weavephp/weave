@@ -121,7 +121,8 @@ class Dispatch
 			$dispatchable,
 			$resolutionType,
 			DispatchAdaptorInterface::SOURCE_DISPATCH_MIDDLEWARE,
-			$request);
+			$request
+		);
 
 		// If something was returned then return back down the middleware
 		if ($dispatchResponse !== false) {

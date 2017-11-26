@@ -66,7 +66,7 @@ class Router
 		callable $routeProvider,
 		ResolveAdaptorInterface $resolver,
 		DispatchAdaptorInterface $dispatcher
-		) {
+	) {
 		$this->adaptor = $adaptor;
 		$this->routeProvider = $routeProvider;
 		$this->resolver = $resolver;
