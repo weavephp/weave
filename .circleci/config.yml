@@ -29,6 +29,9 @@ jobs:
       - run:
           name: Composer install
           command: composer install -n --prefer-dist
+      - run:
+          name: Create reports folder
+          command: mkdir -p ~/reports
 
       - save_cache:
           paths:
@@ -36,9 +39,15 @@ jobs:
           key: v1-dependencies-{{ checksum "composer.json" }}
         
       - run:
-          name: Run CS tests
-          command: vendor/bin/phpcs
+          name: Run Style Check
+          command: vendor/bin/phpcs --report=junit --report-file=~/reports/codestyle-junit.xml
           
       #- run:
       #    name: Run Unit tests
-      #    command: phpunit
+      #    command: phpunit --log-junit ~/reports/unittest-junit.xml
+      
+      - store_test_results:
+          path: ~/reports
+          
+      - store_artifacts:
+          path: ~/reports
