@@ -29,9 +29,11 @@ jobs:
       - run:
           name: Composer install
           command: composer install -n --prefer-dist
+          
       - run:
           name: Create reports folder
-          command: mkdir -p ~/reports
+          command: mkdir -p /reports
+          when: always
 
       - save_cache:
           paths:
@@ -40,14 +42,14 @@ jobs:
         
       - run:
           name: Run Style Check
-          command: vendor/bin/phpcs --report=junit --report-file=~/reports/codestyle-junit.xml
+          command: vendor/bin/phpcs --report=junit --report-file=/reports/codestyle-junit.xml
           
       #- run:
       #    name: Run Unit tests
-      #    command: phpunit --log-junit ~/reports/unittest-junit.xml
+      #    command: phpunit --log-junit /reports/unittest-junit.xml
       
       - store_test_results:
-          path: ~/reports
+          path: /reports
           
       - store_artifacts:
-          path: ~/reports
+          path: /reports
