@@ -7,3 +7,4 @@
 /README.md			export-ignore
 /.circleci			export-ignore
 /.vscode				export-ignore
+/.codecov.yml		export-ignore
