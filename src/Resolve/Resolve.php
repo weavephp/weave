@@ -95,7 +95,8 @@ class Resolve implements ResolveAdaptorInterface
 	protected function resolveMiddlewarePipeline($value)
 	{
 		$value = strstr($value, '|', true);
-		$middleware = ($this->instantiator)(\Weave\Middleware\Middleware::class);
+		$instantiator = $this->instantiator;
+		$middleware = $instantiator(\Weave\Middleware\Middleware::class);
 		return function (Request $request, $response = null) use ($middleware, $value) {
 			return $middleware->chain($value, $request, $response);
 		};
@@ -123,7 +124,8 @@ class Resolve implements ResolveAdaptorInterface
 	protected function resolveInstanceMethod($value)
 	{
 		$callable = explode('->', $value);
-		$callable[0] = ($this->instantiator)($callable[0]);
+		$instantiator = $this->instantiator;
+		$callable[0] = $instantiator($callable[0]);
 		return \Closure::fromCallable($callable);
 	}
 
@@ -136,6 +138,7 @@ class Resolve implements ResolveAdaptorInterface
 	 */
 	protected function resolveInvokable($value)
 	{
-		return ($this->instantiator)($value);
+		$instantiator = $this->instantiator;
+		return $instantiator($value);
 	}
 }
