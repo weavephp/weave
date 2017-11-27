@@ -8,7 +8,7 @@ jobs:
     docker:
       # specify the version you desire here
       - image: circleci/php:5.6-node-browsers
-      
+
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
@@ -29,7 +29,7 @@ jobs:
       - run:
           name: Composer install
           command: composer install -n --prefer-dist
-          
+
       - run:
           name: Create reports folder
           command: mkdir -p /tmp/reports
@@ -39,17 +39,17 @@ jobs:
           paths:
             - ./vendor
           key: v1-dependencies-{{ checksum "composer.json" }}
-        
+
       - run:
           name: Run Style Check
           command: vendor/bin/phpcs --report=junit --report-file=/tmp/reports/codestyle-junit.xml
-          
-      #- run:
-      #    name: Run Unit tests
-      #    command: phpunit --log-junit /tmp/reports/unittest-junit.xml
-      
+
+      - run:
+          name: Run Unit tests
+          command: phpunit --log-junit /tmp/reports/unittest-junit.xml
+
       - store_test_results:
           path: /tmp/reports
-          
+
       - store_artifacts:
           path: /tmp/reports
