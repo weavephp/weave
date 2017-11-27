@@ -6,3 +6,4 @@
 /tests				export-ignore
 /README.md			export-ignore
 /.circleci			export-ignore
+/.vscode				export-ignore

@@ -1,0 +1,26 @@
+<phpunit
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/5.7/phpunit.xsd"
+	backupGlobals="false"
+	backupStaticAttributes="false"
+	beStrictAboutTestsThatDoNotTestAnything="true"
+	beStrictAboutChangesToGlobalState="true"
+	beStrictAboutOutputDuringTests="true"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	processIsolation="false"
+	stopOnFailure="false"
+>
+	<testsuites>
+		<testsuite name="Unit Tests">
+			<directory>./tests</directory>
+		</testsuite>
+	</testsuites>
+	<filter>
+		<whitelist processUncoveredFilesFromWhitelist="true">
+			<directory suffix=".php">./src</directory>
+		</whitelist>
+	</filter>
+</phpunit>
