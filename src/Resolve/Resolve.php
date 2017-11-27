@@ -111,7 +111,9 @@ class Resolve implements ResolveAdaptorInterface
 	 */
 	protected function resolveStatic($value)
 	{
-		return \Closure::fromCallable($value);
+		return function () use ($value) {
+			return call_user_func($value);
+		};
 	}
 
 	/**
@@ -126,7 +128,9 @@ class Resolve implements ResolveAdaptorInterface
 		$callable = explode('->', $value);
 		$instantiator = $this->instantiator;
 		$callable[0] = $instantiator($callable[0]);
-		return \Closure::fromCallable($callable);
+		return function () use ($callable) {
+			return call_user_func($callable);
+		};
 	}
 
 	/**
