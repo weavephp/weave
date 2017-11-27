@@ -124,7 +124,8 @@ class Middleware
 	 */
 	public function chain($pipelineName, Request $request, Response $response = null)
 	{
-		$pipeline = ($this->pipelineProvider)($pipelineName);
+		$pipelineProvider = $this->pipelineProvider;
+		$pipeline = $pipelineProvider($pipelineName);
 		return $this->adaptor->executePipeline($pipeline, $request, $response);
 	}
 
