@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 class DispatchInvokeTest extends TestCase
 {
 	/**
-	 * Test basic consturction with the mock objects works.
+	 * Test basic construction with the mock objects works.
 	 *
 	 * @return null
 	 */
