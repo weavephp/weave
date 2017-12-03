@@ -106,7 +106,11 @@ class Dispatch
 		// If there's nothing to dispatch, continue along the middleware pipeline
 		$handler = $request->getAttribute('dispatch.handler', false);
 		if ($handler === false) {
-			return $next($request);
+			if (method_exists($next, 'handle')) {
+				return $next->handle($request);
+			} else {
+				return $next->process($request);
+			}
 		}
 
 		// Setup any remaining chained parts of the dispatch for future dispatch
