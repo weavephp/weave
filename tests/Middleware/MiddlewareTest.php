@@ -53,7 +53,7 @@ class MiddlewareTest extends TestCase
 		$middlewareAdaptor->method('setResolver')
 		->with(
 			$this->callback(
-				function($callable) use ($request) {
+				function ($callable) use ($request) {
 					$dispatchable = $callable('foo');
 					$this->assertEquals('pong', $dispatchable($request));
 					return true;
