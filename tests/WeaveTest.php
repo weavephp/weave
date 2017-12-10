@@ -54,18 +54,4 @@ class WeaveTest extends TestCase
 
 		$result = $weaveInstance->start('foo', 'baa');
 	}
-
-	/*
-		public function start($environment = null, $configLocation = null)
-	{
-		$config = $this->loadConfig($environment, $configLocation);
-		$this->loadErrorHandler($config, $environment);
-		$instantiator = $this->loadContainer($config, $environment);
-
-		$middleware = $instantiator(Middleware\Middleware::class);
-		$response = $middleware->execute();
-
-		$middleware->emit($response);
-	}
-	*/
 }
