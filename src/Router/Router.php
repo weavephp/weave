@@ -79,7 +79,7 @@ class Router extends \Weave\Adaptor\Middleware\Base
 	 *
 	 * @return Response
 	 */
-	protected function do(Request $request)
+	protected function run(Request $request)
 	{
 		if (!$this->routesConfigured) {
 			$this->adaptor->configureRoutes($this->routeProvider);

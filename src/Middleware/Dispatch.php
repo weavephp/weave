@@ -53,7 +53,7 @@ class Dispatch extends \Weave\Adaptor\Middleware\Base
 	 *
 	 * @return Response
 	 */
-	protected function do(Request $request)
+	protected function run(Request $request)
 	{
 		// If there's nothing to dispatch, continue along the middleware pipeline
 		$handler = $request->getAttribute('dispatch.handler', false);
