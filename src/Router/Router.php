@@ -14,7 +14,7 @@ use Weave\Dispatch\DispatchAdaptorInterface;
  *
  * This class acts as a Middleware and wraps the chosen Router Adaptor.
  */
-class Router
+class Router extends \Weave\Adaptor\Middleware\Base
 {
 	/**
 	 * Resolver interface instance.
@@ -73,62 +73,13 @@ class Router
 	}
 
 	/**
-	 * PSR7 middleware double-pass entrypoint.
-	 *
-	 * @param Request  $request  The PSR7 request.
-	 * @param mixed    $response Some form of PSR7-style response or a PSR15 delegate.
-	 * @param callable $next     Some form of callable to the next pipeline entry.
-	 *
-	 * @return mixed Some form of PSR7-style Response.
-	 */
-	public function __invoke(Request $request, $response, $next = null)
-	{
-		// Cope with invoked single-pass and invoked double-pass middlewares
-		if (is_callable($response)) {
-			$next = $response;
-			$response = null;
-		}
-		$routeResponse = $this->route($request, $response);
-
-		if ($routeResponse !== false) {
-			return $routeResponse;
-		}
-
-		return $next($request, $response);
-	}
-
-	/**
-	 * PSR7 middleware PSR15 draft single-pass entrypoint.
-	 *
-	 * @param Request $request The PSR7 request.
-	 * @param mixed   $next    Some form of delegate to the next pipeline entry.
-	 *
-	 * @return mixed Some form of PSR7-style Response.
-	 */
-	public function process(Request $request, $next)
-	{
-		$routeResponse = $this->route($request);
-
-		if ($routeResponse !== false) {
-			return $routeResponse;
-		}
-
-		if (method_exists($next, 'handle')) {
-			return $next->handle($request);
-		} else {
-			return $next->process($request);
-		}
-	}
-
-	/**
 	 * Configure and then attempt to route and dispatch for the supplied Request.
 	 *
 	 * @param Request $request The request to route.
-	 * @param Response $response The response (for double-pass middleware).
 	 *
-	 * @return Response|false Returns false if unable to route.
+	 * @return Response
 	 */
-	protected function route(Request $request, $response = null)
+	protected function do(Request $request)
 	{
 		if (!$this->routesConfigured) {
 			$this->adaptor->configureRoutes($this->routeProvider);
@@ -138,18 +89,25 @@ class Router
 		$handler = $this->adaptor->route($request);
 
 		if ($handler === false) {
-			return false;
+			return $this->chain($request);
 		}
 
+		// Setup any remaining chained parts of the dispatch for future dispatch
 		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
+		// Resolve the handler into something callable
 		$dispatchable = $this->resolver->resolve($handler, $resolutionType);
-		return $this->dispatcher->dispatch(
+
+		$parameters = [
 			$dispatchable,
 			$resolutionType,
 			DispatchAdaptorInterface::SOURCE_ROUTER,
-			$request,
-			$response
-		);
+			$request
+		];
+		$response = $this->getResponseObject();
+		if ($response !== null) {
+			$parameters[] = $response;
+		}
+		return $this->dispatcher->dispatch(...$parameters) ?: $this->chain($request);
 	}
 }
