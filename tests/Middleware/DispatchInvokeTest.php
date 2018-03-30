@@ -64,7 +64,7 @@ class DispatchInvokeTest extends TestCase
 
 		$result = $dispatch(
 			$request,
-			function ($request, $response) {
+			function ($request) {
 				return 'foo';
 			}
 		);

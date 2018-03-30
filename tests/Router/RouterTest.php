@@ -133,8 +133,7 @@ class RouterTest extends TestCase
 			$this->equalTo('foo'),
 			$this->equalTo(null),
 			$this->equalTo(\Weave\Dispatch\DispatchAdaptorInterface::SOURCE_ROUTER),
-			$this->equalTo($request),
-			$this->equalTo(null)
+			$this->equalTo($request)
 		)
 		->willReturn('bar');
 
@@ -238,9 +237,8 @@ class RouterTest extends TestCase
 
 		$result = $router(
 			$request,
-			function ($incomingRequest, $incomingResponse) use ($request) {
+			function ($incomingRequest) use ($request) {
 				$this->assertEquals($request, $incomingRequest);
-				$this->assertEquals(null, $incomingResponse);
 				return 'foo';
 			}
 		);
@@ -287,8 +285,7 @@ class RouterTest extends TestCase
 			$this->equalTo('foo'),
 			$this->equalTo(null),
 			$this->equalTo(\Weave\Dispatch\DispatchAdaptorInterface::SOURCE_ROUTER),
-			$this->equalTo($request),
-			$this->equalTo(null)
+			$this->equalTo($request)
 		)
 		->willReturn('bar');
 
