@@ -45,11 +45,6 @@ jobs:
           command: vendor/bin/phpcs --report=junit --report-file=/tmp/reports/codestyle-junit.xml
 
       - run:
-          name: Enable xDebug
-          command: sudo pecl install xdebug-2.5.5 && sudo docker-php-ext-enable xdebug
-          when: always
-
-      - run:
           name: Run Unit tests
           command: vendor/bin/phpunit --log-junit /tmp/reports/unittest-junit.xml --coverage-clover=/tmp/reports/coverage.xml
 
