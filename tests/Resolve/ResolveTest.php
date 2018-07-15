@@ -20,6 +20,7 @@ class ResolveTest extends TestCase
 		$this->assertEquals(['world'], $resolver->shift('|world'));
 		$this->assertEquals(['world'], $resolver->shift('hello|world'));
 		$this->assertEquals(['world|', 'universe'], $resolver->shift('hello|world|universe'));
+		$this->assertEquals(['world|', 'universe'], $resolver->shift(['hello|', 'world|', 'universe']));
 	}
 
 	public function testResolveOriginal()
