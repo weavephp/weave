@@ -29,25 +29,25 @@ interface ResolveAdaptorInterface
 	 * If the string value contains '->' treat it as an instance method call.
 	 * Otherwise, attempt to treat it as an invokable.
 	 *
-	 * @param mixed  $value           The value to resolve. Usually a string or callable.
-	 * @param string &$resolutionType Set to the type of resolution identified.
+	 * @param string|callable $value           The value to resolve.
+	 * @param string          $resolutionType Set to the type of resolution identified.
 	 *
-	 * @return mixed Usually some form of callable.
+	 * @return callable Usually some form of callable.
 	 */
 	public function resolve($value, &$resolutionType);
 
 	/**
-	 * Return the string of remaining dispatch steps with the first step removed (shifted).
+	 * Return the array of remaining dispatch steps with the first step removed (shifted).
 	 *
-	 * A dispatch string can contain multiple middleware pipe names separated by a '|' char
+	 * A dispatch array can contain multiple middleware pipe names separated by a '|' char
 	 * which can be progressively consumed by Dispatch middlewares. This method removes a
-	 * single dispatch pipeline step, returning the remaining string.
+	 * single dispatch pipeline step, returning the remaining array.
 	 *
-	 * If something other than a string is passed in then return an empty string.
+	 * If something other than an array is passed in then return an empty array.
 	 *
-	 * @param mixed $value The string of dispatch steps.
+	 * @param array|string|callable $value The dispatch steps.
 	 *
-	 * @return string The string of remaining dispatch steps.
+	 * @return array The array of remaining dispatch steps.
 	 */
 	public function shift($value);
 }

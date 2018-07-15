@@ -29,42 +29,74 @@ class Resolve implements ResolveAdaptorInterface
 	}
 
 	/**
-	 * Return the string of remaining dispatch steps with the first step removed (shifted).
+	 * Return the array of remaining dispatch steps with the first step removed (shifted).
 	 *
-	 * A dispatch string can contain multiple middleware pipe names separated by a '|' char
+	 * A dispatch array can contain multiple middleware pipe names separated by a '|' char
 	 * which can be progressively consumed by Dispatch middlewares. This method removes a
-	 * single dispatch pipeline step, returning the remaining string.
+	 * single dispatch pipeline step, returning the remaining array.
 	 *
-	 * If something other than a string is passed in then return an empty string.
+	 * If a string is passed into the array, attempt to split on the '|' char and return
+	 * an array of the remaining steps.
 	 *
-	 * @param mixed $value The string of dispatch steps.
+	 * If something else is passed in then return an empty array.
 	 *
-	 * @return string The string of remaining dispatch steps.
+	 * @param array|string|callable $values The dispatch steps.
+	 *
+	 * @return array The array of remaining dispatch steps.
 	 */
-	public function shift($value)
+	public function shift($values)
 	{
-		if (!is_string($value) || strpos($value, '|') === false) {
-			return '';
+		if (!is_array($values)) {
+			if (!is_string($values)) {
+				// Handle callables being passed in.
+				return [];
+			}
+
+			// Handle a string being passed in
+			$components = explode('|', $values);
+			if (count($components) < 2) {
+				return [];
+			} elseif (count($components) === 2) {
+				return [$components[1]];
+			} else {
+				array_shift($components);
+				$lastItem = array_pop($components);
+				$components = array_map(
+					function ($value) {
+						return $value . '|';
+					},
+					$components
+				);
+				$components[] = $lastItem;
+				return $components;
+			}
+		} else {
+			$shiftedArray = $values;
+			array_shift($shiftedArray);
+			return $shiftedArray;
 		}
-		return substr($value, strpos($value, '|') + 1);
 	}
 
 	/**
 	 * Attempt to convert a provided value into a callable.
 	 *
+	 * If the value is an array, the rest of the rules apply to the first item.
 	 * If the value isn't a string it is simply returned.
 	 * If the string value contains '|' treat it as a pipeline name.
 	 * If the string value contains '::' treat it as a static method call.
 	 * If the string value contains '->' treat it as an instance method call.
 	 * Otherwise, attempt to treat it as an invokable.
 	 *
-	 * @param mixed  $value           The value to resolve. Usually a string or callable.
-	 * @param string &$resolutionType Set to the type of resolution identified.
+	 * @param string|callable|array $value           The value to resolve.
+	 * @param string                $resolutionType Set to the type of resolution identified.
 	 *
-	 * @return mixed Usually some form of callable.
+	 * @return callable Usually some form of callable.
 	 */
 	public function resolve($value, &$resolutionType)
 	{
+		if (is_array($value)) {
+			$value = $value[0];
+		}
 		if (is_string($value)) {
 			if (strpos($value, '|') !== false) {
 				$resolutionType = ResolveAdaptorInterface::TYPE_PIPELINE;
