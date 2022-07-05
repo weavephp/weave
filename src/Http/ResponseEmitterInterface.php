@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave core.
  */
@@ -17,7 +20,7 @@ interface ResponseEmitterInterface
 	 *
 	 * @param Response $response The response object to emit to the client.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	public function emit(Response $response);
+	public function emit(Response $response): void;
 }

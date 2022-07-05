@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave core.
  */
@@ -16,12 +19,12 @@ trait Weave
 	 * Environment and config location details are passed on to the config adaptor
 	 * and environment is also passed to the error adaptor and the container adaptor.
 	 *
-	 * @param string $environment    Optional indication of the runtime environment.
-	 * @param string $configLocation Optional location from which to load config.
+	 * @param ?string $environment    Optional indication of the runtime environment.
+	 * @param ?string $configLocation Optional location from which to load config.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	public function start($environment = null, $configLocation = null)
+	public function start(?string $environment = null, ?string $configLocation = null): void
 	{
 		$config = $this->loadConfig($environment, $configLocation);
 		$this->loadErrorHandler($config, $environment);
@@ -36,30 +39,30 @@ trait Weave
 	/**
 	 * Load config and return as an array.
 	 *
-	 * @param string $environment    Optional indication of the runtime environment.
-	 * @param string $configLocation Optional location from which to load config.
+	 * @param ?string $environment    Optional indication of the runtime environment.
+	 * @param ?string $configLocation Optional location from which to load config.
 	 *
 	 * @return array
 	 */
-	abstract protected function loadConfig($environment = null, $configLocation = null);
+	abstract protected function loadConfig(?string $environment = null, ?string $configLocation = null): array;
 
 	/**
 	 * Setup a global error handler.
 	 *
 	 * @param array  $config      Optional config array as provided from loadConfig().
-	 * @param string $environment Optional indication of the runtime environment.
+	 * @param ?string $environment Optional indication of the runtime environment.
 	 *
 	 * @return null
 	 */
-	abstract protected function loadErrorHandler(array $config = [], $environment = null);
+	abstract protected function loadErrorHandler(array $config = [], ?string $environment = null);
 
 	/**
 	 * Setup the Dependency Injection Container.
 	 *
 	 * @param array  $config      Optional config array as provided from loadConfig().
-	 * @param string $environment Optional indication of the runtime environment.
+	 * @param ?string $environment Optional indication of the runtime environment.
 	 *
 	 * @return callable A callable that can instantiate instances of classes from the DIC.
 	 */
-	abstract protected function loadContainer(array $config = [], $environment = null);
+	abstract protected function loadContainer(array $config = [], ?string $environment = null);
 }

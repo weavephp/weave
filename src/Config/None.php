@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave core.
  */
@@ -15,12 +18,12 @@ trait None
 	/**
 	 * Simply return an empty array.
 	 *
-	 * @param string $environment    Optional indication of the runtime environment.
-	 * @param string $configLocation Optional location from which to load config.
+	 * @param ?string $environment    Optional indication of the runtime environment.
+	 * @param ?string $configLocation Optional location from which to load config.
 	 *
 	 * @return array
 	 */
-	protected function loadConfig($environment = null, $configLocation = null)
+	protected function loadConfig(?string $environment = null, ?string $configLocation = null)
 	{
 		return [];
 	}

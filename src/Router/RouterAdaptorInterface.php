@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -16,7 +19,7 @@ interface RouterAdaptorInterface
 	 *
 	 * @param callable $routeProvider The method to use to configure the routes.
 	 *
-	 * @return null
+	 * @return void
 	 */
 	public function configureRoutes(callable $routeProvider);
 
@@ -27,7 +30,7 @@ interface RouterAdaptorInterface
 	 *
 	 * @param Request &$request The PSR7 request to attempt to route.
 	 *
-	 * @return false|string|callable
+	 * @return false|string|callable|array
 	 */
-	public function route(Request &$request);
+	public function route(Request &$request): false|string|callable|array;
 }

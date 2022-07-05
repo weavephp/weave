@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -17,39 +20,11 @@ use Weave\Dispatch\DispatchAdaptorInterface;
 class Middleware
 {
 	/**
-	 * The Middleware adaptor.
-	 *
-	 * @var MiddlewareAdaptorInterface
-	 */
-	protected $adaptor;
-
-	/**
 	 * The pipeline provider callable.
 	 *
 	 * @var callable
 	 */
 	protected $pipelineProvider;
-
-	/**
-	 * The PSR7 request object factory.
-	 *
-	 * @var Http\RequestFactoryInterface
-	 */
-	protected $requestFactory;
-
-	/**
-	 * The PSR7 response object factory.
-	 *
-	 * @var Http\ResponseFactoryInterface
-	 */
-	protected $responseFactory;
-
-	/**
-	 * The PSR7 response emitter.
-	 *
-	 * @var Http\ResponseEmitterInterface
-	 */
-	protected $emitter;
 
 	/**
 	 * Constructor.
@@ -63,28 +38,25 @@ class Middleware
 	 * @param Http\ResponseEmitterInterface $emitter          The PSR7 Response emitter.
 	 */
 	public function __construct(
-		MiddlewareAdaptorInterface $adaptor,
+		protected MiddlewareAdaptorInterface $adaptor,
 		callable $pipelineProvider,
 		ResolveAdaptorInterface $resolver,
 		DispatchAdaptorInterface $dispatcher,
-		Http\RequestFactoryInterface $requestFactory,
-		Http\ResponseFactoryInterface $responseFactory,
-		Http\ResponseEmitterInterface $emitter
+		protected Http\RequestFactoryInterface $requestFactory,
+		protected Http\ResponseFactoryInterface $responseFactory,
+		protected Http\ResponseEmitterInterface $emitter
 	) {
-		$this->adaptor = $adaptor;
 		$this->pipelineProvider = $pipelineProvider;
-		$this->requestFactory = $requestFactory;
-		$this->responseFactory = $responseFactory;
-		$this->emitter = $emitter;
-
 		$this->adaptor->setResolver(
 			function ($value) use ($resolver, $dispatcher) {
+				$resolutionType = ''; // overwritten by the resolve call below
 				$dispatchable = $resolver->resolve($value, $resolutionType);
-				return function (...$rest) use ($dispatchable, $dispatcher, $resolutionType) {
+				return function (Request $request, ...$rest) use ($dispatchable, $dispatcher, $resolutionType) {
 					return $dispatcher->dispatch(
 						$dispatchable,
 						$resolutionType,
 						DispatchAdaptorInterface::SOURCE_MIDDLEWARE_STACK,
+						$request,
 						...$rest
 					);
 				};
@@ -98,31 +70,31 @@ class Middleware
 	 * Similar to chaining but also sets up a Request based on the global data and,
 	 * if needed, a Response object.
 	 *
-	 * @param string $pipelineName Optional pipeline name.
+	 * @param ?string $pipelineName Optional pipeline name.
 	 *
 	 * @return Response A PSR7 response object.
 	 */
-	public function execute($pipelineName = null)
+	public function execute(?string $pipelineName = null): Response
 	{
 		$request = $this->requestFactory->newIncomingRequest();
-		if ($this->adaptor->isDoublePass()) {
-			$response = $this->responseFactory->newResponse();
-		} else {
-			$response = null;
-		}
-		return $this->chain($pipelineName, $request, $response);
+
+		return $this->chain(
+			$pipelineName,
+			$request,
+			$this->adaptor->isDoublePass() ? $this->responseFactory->newResponse() : null
+		);
 	}
 
 	/**
 	 * Create and execute a named pipeline chaining from an existing Request/Response.
 	 *
-	 * @param string        $pipelineName The name of the pipeline to create.
-	 * @param Request       $request      The PSR7 request object.
-	 * @param Response|null $response     The PSR7 response object (for double-pass pipelines).
+	 * @param ?string    $pipelineName The name of the pipeline to create.
+	 * @param Request   $request      The PSR7 request object.
+	 * @param ?Response $response     The PSR7 response object (for double-pass pipelines).
 	 *
 	 * @return Response A PSR7 response.
 	 */
-	public function chain($pipelineName, Request $request, Response $response = null)
+	public function chain(?string $pipelineName, Request $request, ?Response $response = null): Response
 	{
 		$pipelineProvider = $this->pipelineProvider;
 		$pipeline = $pipelineProvider($pipelineName);
@@ -132,11 +104,11 @@ class Middleware
 	/**
 	 * Output a PSR7 Response to the client.
 	 *
-	 * @param Response The PSR7 response to output to the client.
+	 * @param Response $response The PSR7 response to output to the client.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	public function emit(Response $response)
+	public function emit(Response $response): void
 	{
 		$this->emitter->emit($response);
 	}

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -40,11 +43,13 @@ class RouterTest extends TestCase
 		->method('withAttribute')
 		->with(
 			$this->equalTo('dispatch.handler'),
-			$this->equalTo('pong')
+			$this->equalTo(['pong'])
 		)
 		->willReturn($request);
 
-		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response1 = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response2 = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response2->method('getReasonPhrase')->willReturn('bar');
 
 		$routerAdaptor = $this->createMock(RouterAdaptorInterface::class);
 		$routerAdaptor->expects($this->once())->method('configureRoutes');
@@ -57,24 +62,25 @@ class RouterTest extends TestCase
 		$resolveAdaptor->expects($this->once())
 		->method('shift')
 		->with($this->equalTo('ping'))
-		->willReturn('pong');
+		->willReturn(['pong']);
 
+		$fn = fn () => 'foo';
 		$resolveAdaptor->expects($this->once())
 		->method('resolve')
 		->with($this->equalTo('ping'))
-		->willReturn('foo');
+		->willReturn($fn);
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatchAdaptor->expects($this->once())
 		->method('dispatch')
 		->with(
-			$this->equalTo('foo'),
+			$this->equalTo($fn),
 			$this->equalTo(null),
 			$this->equalTo(\Weave\Dispatch\DispatchAdaptorInterface::SOURCE_ROUTER),
 			$this->equalTo($request),
-			$this->equalTo($response)
+			$this->equalTo($response1)
 		)
-		->willReturn('bar');
+		->willReturn($response2);
 
 		$router = new Router(
 			$routerAdaptor,
@@ -86,12 +92,12 @@ class RouterTest extends TestCase
 
 		$result = $router(
 			$request,
-			$response,
+			$response1,
 			function () {
 			}
 		);
 
-		$this->assertEquals('bar', $result);
+		$this->assertEquals('bar', $result->getReasonPhrase());
 	}
 
 	/**
@@ -104,9 +110,14 @@ class RouterTest extends TestCase
 		->method('withAttribute')
 		->with(
 			$this->equalTo('dispatch.handler'),
-			$this->equalTo('pong')
+			$this->equalTo(['pong'])
 		)
 		->willReturn($request);
+
+		$fn = fn () => 'foo';
+
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('bar');
 
 		$routerAdaptor = $this->createMock(RouterAdaptorInterface::class);
 		$routerAdaptor->expects($this->once())->method('configureRoutes');
@@ -119,23 +130,23 @@ class RouterTest extends TestCase
 		$resolveAdaptor->expects($this->once())
 		->method('shift')
 		->with($this->equalTo('ping'))
-		->willReturn('pong');
+		->willReturn(['pong']);
 
 		$resolveAdaptor->expects($this->once())
 		->method('resolve')
 		->with($this->equalTo('ping'))
-		->willReturn('foo');
+		->willReturn($fn);
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatchAdaptor->expects($this->once())
 		->method('dispatch')
 		->with(
-			$this->equalTo('foo'),
+			$this->equalTo($fn),
 			$this->equalTo(null),
 			$this->equalTo(\Weave\Dispatch\DispatchAdaptorInterface::SOURCE_ROUTER),
 			$this->equalTo($request)
 		)
-		->willReturn('bar');
+		->willReturn($response);
 
 		$router = new Router(
 			$routerAdaptor,
@@ -151,7 +162,7 @@ class RouterTest extends TestCase
 			}
 		);
 
-		$this->assertEquals('bar', $result);
+		$this->assertEquals('bar', $result->getReasonPhrase());
 	}
 
 	/**
@@ -164,6 +175,8 @@ class RouterTest extends TestCase
 		->method('withAttribute');
 
 		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response2 = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response2->method('getReasonPhrase')->willReturn('foo');
 
 		$routerAdaptor = $this->createMock(RouterAdaptorInterface::class);
 		$routerAdaptor->expects($this->once())->method('configureRoutes');
@@ -192,14 +205,14 @@ class RouterTest extends TestCase
 		$result = $router(
 			$request,
 			$response,
-			function ($incomingRequest, $incomingResponse) use ($request, $response) {
+			function ($incomingRequest, $incomingResponse) use ($request, $response, $response2) {
 				$this->assertEquals($request, $incomingRequest);
 				$this->assertEquals($response, $incomingResponse);
-				return 'foo';
+				return $response2;
 			}
 		);
 
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 
 	/**
@@ -210,6 +223,9 @@ class RouterTest extends TestCase
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$request->expects($this->never())
 		->method('withAttribute');
+
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
 
 		$routerAdaptor = $this->createMock(RouterAdaptorInterface::class);
 		$routerAdaptor->expects($this->once())->method('configureRoutes');
@@ -237,13 +253,13 @@ class RouterTest extends TestCase
 
 		$result = $router(
 			$request,
-			function ($incomingRequest) use ($request) {
+			function ($incomingRequest) use ($request, $response) {
 				$this->assertEquals($request, $incomingRequest);
-				return 'foo';
+				return $response;
 			}
 		);
 
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 
 	/**
@@ -256,7 +272,7 @@ class RouterTest extends TestCase
 		->method('withAttribute')
 		->with(
 			$this->equalTo('dispatch.handler'),
-			$this->equalTo('pong')
+			$this->equalTo(['pong'])
 		)
 		->willReturn($request);
 
@@ -271,23 +287,27 @@ class RouterTest extends TestCase
 		$resolveAdaptor->expects($this->once())
 		->method('shift')
 		->with($this->equalTo('ping'))
-		->willReturn('pong');
+		->willReturn(['pong']);
 
+		$fn = fn () => 'foo';
 		$resolveAdaptor->expects($this->once())
 		->method('resolve')
 		->with($this->equalTo('ping'))
-		->willReturn('foo');
+		->willReturn($fn);
+
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('bar');
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatchAdaptor->expects($this->once())
 		->method('dispatch')
 		->with(
-			$this->equalTo('foo'),
+			$this->equalTo($fn),
 			$this->equalTo(null),
 			$this->equalTo(\Weave\Dispatch\DispatchAdaptorInterface::SOURCE_ROUTER),
 			$this->equalTo($request)
 		)
-		->willReturn('bar');
+		->willReturn($response);
 
 		$router = new Router(
 			$routerAdaptor,
@@ -302,7 +322,7 @@ class RouterTest extends TestCase
 			null
 		);
 
-		$this->assertEquals('bar', $result);
+		$this->assertEquals('bar', $result->getReasonPhrase());
 	}
 
 	/**
@@ -338,12 +358,15 @@ class RouterTest extends TestCase
 			$dispatchAdaptor
 		);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('ping');
+
 		$result = $router->process(
 			$request,
-			new RouterTestHandleClass()
+			new RouterTestHandleClass($response)
 		);
 
-		$this->assertEquals('ping', $result);
+		$this->assertEquals('ping', $result->getReasonPhrase());
 	}
 
 	/**
@@ -379,11 +402,14 @@ class RouterTest extends TestCase
 			$dispatchAdaptor
 		);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('ping');
+
 		$result = $router->process(
 			$request,
-			new RouterTestProcessClass()
+			new RouterTestProcessClass($response)
 		);
 
-		$this->assertEquals('ping', $result);
+		$this->assertEquals('ping', $result->getReasonPhrase());
 	}
 }

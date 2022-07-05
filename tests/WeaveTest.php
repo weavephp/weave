@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -46,11 +49,7 @@ class WeaveTest extends TestCase
 			$this->equalTo(['ping']),
 			$this->equalTo('foo')
 		)
-		->willReturn(
-			function () use ($middleware) {
-				return $middleware;
-			}
-		);
+		->willReturn(fn () => $middleware);
 
 		$result = $weaveInstance->start('foo', 'baa');
 	}

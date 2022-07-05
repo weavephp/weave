@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -11,9 +14,7 @@ class DispatchTest extends TestCase
 	public function testDispatch()
 	{
 		$dispatch = new Dispatch();
-		$dispatchable = function ($request, ...$rest) {
-			return [$request, $rest];
-		};
+		$dispatchable = fn ($request, ...$rest) => [$request, $rest];
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$additionalParameters = ['foo', 'bar'];
 

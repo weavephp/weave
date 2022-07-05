@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -28,8 +31,13 @@ class Dispatch implements DispatchAdaptorInterface
 	 *
 	 * @return mixed Some form of PSR-7 style response.
 	 */
-	public function dispatch($dispatchable, $resolutionType, $dispatchSource, Request $request, ...$rest)
-	{
+	public function dispatch(
+		callable $dispatchable,
+		string $resolutionType,
+		string $dispatchSource,
+		Request $request,
+		mixed ...$rest
+	): mixed {
 		return $dispatchable($request, ...$rest);
 	}
 }

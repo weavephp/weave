@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -8,15 +11,15 @@ class WeaveTestClass
 {
 	use Weave;
 
-	protected function loadConfig($environment = null, $configLocation = null)
+	protected function loadConfig(?string $environment = null, ?string $configLocation = null): array
 	{
 	}
 
-	protected function loadErrorHandler(array $config = [], $environment = null)
+	protected function loadErrorHandler(array $config = [], ?string $environment = null)
 	{
 	}
 
-	protected function loadContainer(array $config = [], $environment = null)
+	protected function loadContainer(array $config = [], ?string $environment = null)
 	{
 	}
 }

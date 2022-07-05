@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -44,7 +47,7 @@ class Resolve implements ResolveAdaptorInterface
 	 *
 	 * @return array The array of remaining dispatch steps.
 	 */
-	public function shift($values)
+	public function shift(array|string|callable $values): array
 	{
 		if (!is_array($values)) {
 			if (!is_string($values)) {
@@ -62,9 +65,7 @@ class Resolve implements ResolveAdaptorInterface
 				array_shift($components);
 				$lastItem = array_pop($components);
 				$components = array_map(
-					function ($value) {
-						return $value . '|';
-					},
+					fn ($value) => $value . '|',
 					$components
 				);
 				$components[] = $lastItem;
@@ -92,7 +93,7 @@ class Resolve implements ResolveAdaptorInterface
 	 *
 	 * @return callable Usually some form of callable.
 	 */
-	public function resolve($value, &$resolutionType)
+	public function resolve(string|callable|array $value, string &$resolutionType): callable
 	{
 		if (is_array($value)) {
 			$value = $value[0];
@@ -124,7 +125,7 @@ class Resolve implements ResolveAdaptorInterface
 	 *
 	 * @return callable A callable that executes the middleware chain.
 	 */
-	protected function resolveMiddlewarePipeline($value)
+	protected function resolveMiddlewarePipeline(string $value): callable
 	{
 		$value = strstr($value, '|', true);
 		$instantiator = $this->instantiator;
@@ -141,7 +142,7 @@ class Resolve implements ResolveAdaptorInterface
 	 *
 	 * @return callable A callable that executes the static method.
 	 */
-	protected function resolveStatic($value)
+	protected function resolveStatic(string $value): callable
 	{
 		return function (...$params) use ($value) {
 			return call_user_func_array($value, $params);
@@ -155,7 +156,7 @@ class Resolve implements ResolveAdaptorInterface
 	 *
 	 * @return callable A callable that executes the instance method.
 	 */
-	protected function resolveInstanceMethod($value)
+	protected function resolveInstanceMethod(string $value): callable
 	{
 		$callable = explode('->', $value);
 		$instantiator = $this->instantiator;
@@ -172,7 +173,7 @@ class Resolve implements ResolveAdaptorInterface
 	 *
 	 * @return callable The invokable class instance.
 	 */
-	protected function resolveInvokable($value)
+	protected function resolveInvokable(string $value): callable
 	{
 		$instantiator = $this->instantiator;
 		return $instantiator($value);

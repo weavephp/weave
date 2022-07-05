@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -27,9 +30,7 @@ class MiddlewareTest extends TestCase
 
 		$middleware = new Middleware(
 			$middlewareAdaptor,
-			function () {
-				return 'pipelineFoo';
-			},
+			fn () => 'pipelineFoo',
 			$resolveAdaptor,
 			$dispatchAdaptor,
 			$requestFactory,
@@ -61,17 +62,19 @@ class MiddlewareTest extends TestCase
 			)
 		);
 
+		$fn = fn () => 'bar';
+
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
 		$resolveAdaptor->expects($this->once())
 		->method('resolve')
 		->with($this->equalTo('foo'))
-		->willReturn('bar');
+		->willReturn($fn);
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatchAdaptor->expects($this->once())
 		->method('dispatch')
 		->with(
-			$this->equalTo('bar'),
+			$this->equalTo($fn),
 			$this->equalTo(null),
 			$this->equalTo(\Weave\Dispatch\DispatchAdaptorInterface::SOURCE_MIDDLEWARE_STACK),
 			$this->equalTo($request)
@@ -84,9 +87,7 @@ class MiddlewareTest extends TestCase
 
 		$middleware = new Middleware(
 			$middlewareAdaptor,
-			function () {
-				return 'pipelineFoo';
-			},
+			fn () => 'pipelineFoo',
 			$resolveAdaptor,
 			$dispatchAdaptor,
 			$requestFactory,
@@ -104,6 +105,9 @@ class MiddlewareTest extends TestCase
 	{
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('ping');
+
 		$middlewareAdaptor = $this->createMock(MiddlewareAdaptorInterface::class);
 		$middlewareAdaptor->method('setResolver');
 		$middlewareAdaptor->method('executePipeline')
@@ -112,7 +116,7 @@ class MiddlewareTest extends TestCase
 			$this->equalTo($request),
 			$this->equalTo(null)
 		)
-		->willReturn('ping');
+		->willReturn($response);
 
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
@@ -123,9 +127,7 @@ class MiddlewareTest extends TestCase
 
 		$middleware = new Middleware(
 			$middlewareAdaptor,
-			function () {
-				return 'pipelineFoo';
-			},
+			fn () => 'pipelineFoo',
 			$resolveAdaptor,
 			$dispatchAdaptor,
 			$requestFactory,
@@ -133,9 +135,9 @@ class MiddlewareTest extends TestCase
 			$emitter
 		);
 
-		$result = $middleware->chain($pipelineName, $request);
+		$result = $middleware->chain('pipelineFoo', $request);
 
-		$this->assertEquals('ping', $result);
+		$this->assertEquals('ping', $result->getReasonPhrase());
 	}
 
 	/**
@@ -146,7 +148,12 @@ class MiddlewareTest extends TestCase
 	public function testExecuteDoublePass()
 	{
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
-		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+
+		$response1 = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response1->method('getReasonPhrase')->willReturn('ping');
+
+		$response2 = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response2->method('getReasonPhrase')->willReturn('wibble');
 
 		$middlewareAdaptor = $this->createMock(MiddlewareAdaptorInterface::class);
 		$middlewareAdaptor->method('setResolver');
@@ -155,9 +162,9 @@ class MiddlewareTest extends TestCase
 		->with(
 			$this->equalTo('pipelineFoo'),
 			$this->equalTo($request),
-			$this->equalTo($response)
+			$this->equalTo($response1)
 		)
-		->willReturn('ping');
+		->willReturn($response1);
 
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
@@ -166,15 +173,13 @@ class MiddlewareTest extends TestCase
 		$requestFactory->method('newIncomingRequest')->willReturn($request);
 
 		$responseFactory = $this->createMock(\Weave\Http\ResponseFactoryInterface::class);
-		$responseFactory->method('newResponse')->willReturn($response);
+		$responseFactory->method('newResponse')->willReturn($response2);
 
 		$emitter = $this->createMock(\Weave\Http\ResponseEmitterInterface::class);
 
 		$middleware = new Middleware(
 			$middlewareAdaptor,
-			function () {
-				return 'pipelineFoo';
-			},
+			fn () => 'pipelineFoo',
 			$resolveAdaptor,
 			$dispatchAdaptor,
 			$requestFactory,
@@ -184,7 +189,7 @@ class MiddlewareTest extends TestCase
 
 		$result = $middleware->execute();
 
-		$this->assertEquals('ping', $result);
+		$this->assertEquals('ping', $result->getReasonPhrase());
 	}
 
 	/**
@@ -196,6 +201,9 @@ class MiddlewareTest extends TestCase
 	{
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('ping');
+
 		$middlewareAdaptor = $this->createMock(MiddlewareAdaptorInterface::class);
 		$middlewareAdaptor->method('setResolver');
 		$middlewareAdaptor->method('isDoublePass')->willReturn(false);
@@ -205,7 +213,7 @@ class MiddlewareTest extends TestCase
 			$this->equalTo($request),
 			$this->equalTo(null)
 		)
-		->willReturn('ping');
+		->willReturn($response);
 
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
@@ -220,9 +228,7 @@ class MiddlewareTest extends TestCase
 
 		$middleware = new Middleware(
 			$middlewareAdaptor,
-			function () {
-				return 'pipelineFoo';
-			},
+			fn () => 'pipelineFoo',
 			$resolveAdaptor,
 			$dispatchAdaptor,
 			$requestFactory,
@@ -232,7 +238,7 @@ class MiddlewareTest extends TestCase
 
 		$result = $middleware->execute();
 
-		$this->assertEquals('ping', $result);
+		$this->assertEquals('ping', $result->getReasonPhrase());
 	}
 
 	/**
@@ -261,9 +267,7 @@ class MiddlewareTest extends TestCase
 
 		$middleware = new Middleware(
 			$middlewareAdaptor,
-			function () {
-				return 'pipelineFoo';
-			},
+			fn () => 'pipelineFoo',
 			$resolveAdaptor,
 			$dispatchAdaptor,
 			$requestFactory,

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -35,17 +38,16 @@ class DispatchInvokeTest extends TestCase
 		$dispatch = new Dispatch($resolveAdaptor, $dispatchAdaptor);
 
 		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturn(false);
 
 		$result = $dispatch(
 			$request,
 			$response,
-			function ($request, $response) {
-				return 'foo';
-			}
+			fn ($request, $response) => $response
 		);
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 
 	/**
@@ -59,16 +61,16 @@ class DispatchInvokeTest extends TestCase
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatch = new Dispatch($resolveAdaptor, $dispatchAdaptor);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturn(false);
 
 		$result = $dispatch(
 			$request,
-			function ($request) {
-				return 'foo';
-			}
+			fn ($request) => $response
 		);
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 
 	/**
@@ -79,28 +81,29 @@ class DispatchInvokeTest extends TestCase
 	public function testDoublePassWithDispatch()
 	{
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
-		$resolveAdaptor->method('shift')->willReturn(false);
-		$resolveAdaptor->method('resolve')->willReturn('wibble');
+		$resolveAdaptor->method('shift')->willReturn([]);
+		$resolveAdaptor->method('resolve')->willReturn(fn () => 'wibble');
 
+		$response1 = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response1->method('getReasonPhrase')->willReturn('ping');
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
-		$dispatchAdaptor->method('dispatch')->willReturn('ping');
+		$dispatchAdaptor->method('dispatch')->willReturn($response1);
 
 
 		$dispatch = new Dispatch($resolveAdaptor, $dispatchAdaptor);
 
-		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response2 = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response2->method('getReasonPhrase')->willReturn('foo');
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturn('bar');
 		$request->method('withAttribute')->willReturn($request);
 
 		$result = $dispatch(
 			$request,
-			$response,
-			function ($request, $response) {
-				return 'foo';
-			}
+			$response2,
+			fn ($request, $response) => $response
 		);
-		$this->assertEquals('ping', $result);
+		$this->assertEquals('ping', $result->getReasonPhrase());
 	}
 
 	/**
@@ -111,11 +114,13 @@ class DispatchInvokeTest extends TestCase
 	public function testSinglePassWithDispatch()
 	{
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
-		$resolveAdaptor->method('shift')->willReturn(false);
-		$resolveAdaptor->method('resolve')->willReturn('wibble');
+		$resolveAdaptor->method('shift')->willReturn([]);
+		$resolveAdaptor->method('resolve')->willReturn(fn () => 'wibble');
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('ping');
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
-		$dispatchAdaptor->method('dispatch')->willReturn('ping');
+		$dispatchAdaptor->method('dispatch')->willReturn($response);
 
 
 		$dispatch = new Dispatch($resolveAdaptor, $dispatchAdaptor);
@@ -126,11 +131,9 @@ class DispatchInvokeTest extends TestCase
 
 		$result = $dispatch(
 			$request,
-			function ($request) {
-				return 'foo';
-			}
+			fn ($request) => 'foo'
 		);
-		$this->assertEquals('ping', $result);
+		$this->assertEquals('ping', $result->getReasonPhrase());
 	}
 
 	/**
@@ -141,8 +144,8 @@ class DispatchInvokeTest extends TestCase
 	public function testDoublePassWithDispatchFail()
 	{
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
-		$resolveAdaptor->method('shift')->willReturn(false);
-		$resolveAdaptor->method('resolve')->willReturn('wibble');
+		$resolveAdaptor->method('shift')->willReturn([]);
+		$resolveAdaptor->method('resolve')->willReturn(fn () => 'wibble');
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatchAdaptor->method('dispatch')->willReturn(false);
@@ -151,6 +154,7 @@ class DispatchInvokeTest extends TestCase
 		$dispatch = new Dispatch($resolveAdaptor, $dispatchAdaptor);
 
 		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturn('bar');
 		$request->method('withAttribute')->willReturn($request);
@@ -158,11 +162,9 @@ class DispatchInvokeTest extends TestCase
 		$result = $dispatch(
 			$request,
 			$response,
-			function ($request, $response) {
-				return 'foo';
-			}
+			fn ($request, $response) => $response
 		);
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 
 	/**
@@ -173,8 +175,8 @@ class DispatchInvokeTest extends TestCase
 	public function testSinglePassWithDispatchFail()
 	{
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
-		$resolveAdaptor->method('shift')->willReturn(false);
-		$resolveAdaptor->method('resolve')->willReturn('wibble');
+		$resolveAdaptor->method('shift')->willReturn([]);
+		$resolveAdaptor->method('resolve')->willReturn(fn () => 'wibble');
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatchAdaptor->method('dispatch')->willReturn(false);
@@ -182,16 +184,17 @@ class DispatchInvokeTest extends TestCase
 
 		$dispatch = new Dispatch($resolveAdaptor, $dispatchAdaptor);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
+
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturn('bar');
 		$request->method('withAttribute')->willReturn($request);
 
 		$result = $dispatch(
 			$request,
-			function ($request) {
-				return 'foo';
-			}
+			fn ($request) => $response
 		);
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 }

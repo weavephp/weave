@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -6,6 +9,7 @@
 namespace Weave\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 use Weave\Resolve\ResolveAdaptorInterface;
 use Weave\Dispatch\DispatchAdaptorInterface;
 
@@ -19,31 +23,15 @@ use Weave\Dispatch\DispatchAdaptorInterface;
 class Dispatch extends \Weave\Adaptor\Middleware\Base
 {
 	/**
-	 * Resolver interface instance.
-	 *
-	 * @var ResolveAdaptorInterface
-	 */
-	protected $resolver;
-
-	/**
-	 * Dispatcher interface instance.
-	 *
-	 * @var DispatchAdaptorInterface
-	 */
-	protected $dispatcher;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param ResolveAdaptorInterface  $resolver   The resolver.
 	 * @param DispatchAdaptorInterface $dispatcher The dispatcher.
 	 */
 	public function __construct(
-		ResolveAdaptorInterface $resolver,
-		DispatchAdaptorInterface $dispatcher
+		protected ResolveAdaptorInterface $resolver,
+		protected DispatchAdaptorInterface $dispatcher
 	) {
-		$this->resolver = $resolver;
-		$this->dispatcher = $dispatcher;
 	}
 
 	/**
@@ -53,7 +41,7 @@ class Dispatch extends \Weave\Adaptor\Middleware\Base
 	 *
 	 * @return Response
 	 */
-	protected function run(Request $request)
+	protected function run(Request $request): Response
 	{
 		// If there's nothing to dispatch, continue along the middleware pipeline
 		$handler = $request->getAttribute('dispatch.handler', false);
@@ -65,19 +53,21 @@ class Dispatch extends \Weave\Adaptor\Middleware\Base
 		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
 		// Resolve the handler into something callable
+		$resolutionType = ''; // overwritten by the resolve call below
 		$dispatchable = $this->resolver->resolve($handler, $resolutionType);
 
 		// Dispatch
-		$parameters = [
+		$additionalParameters = [];
+		$response = $this->getResponseObject();
+		if ($response !== null) {
+			$additionalParameters[] = $response;
+		}
+		return $this->dispatcher->dispatch(
 			$dispatchable,
 			$resolutionType,
 			DispatchAdaptorInterface::SOURCE_DISPATCH_MIDDLEWARE,
-			$request
-		];
-		$response = $this->getResponseObject();
-		if ($response !== null) {
-			$parameters[] = $response;
-		}
-		return $this->dispatcher->dispatch(...$parameters) ?: $this->chain($request);
+			$request,
+			...$additionalParameters
+		) ?: $this->chain($request);
 	}
 }

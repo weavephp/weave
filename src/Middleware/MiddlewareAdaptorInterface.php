@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -19,25 +22,25 @@ interface MiddlewareAdaptorInterface
 	 *
 	 * @param callable $resolver The resolver.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	public function setResolver(callable $resolver);
+	public function setResolver(callable $resolver): void;
 
 	/**
 	 * Whether the Middleware the Adaptor wraps is a single- or double-pass style Middleware stack.
 	 *
 	 * @return boolean
 	 */
-	public function isDoublePass();
+	public function isDoublePass(): bool;
 
 	/**
 	 * Trigger execution of the supplied pipeline via the Middleware stack.
 	 *
-	 * @param mixed         $pipeline The stack of middleware definitions.
-	 * @param Request       $request  The PSR7 request.
-	 * @param Response|null $response The PSR7 response (for double-pass stacks).
+	 * @param mixed     $pipeline The stack of middleware definitions.
+	 * @param Request   $request  The PSR7 request.
+	 * @param ?Response $response The PSR7 response (for double-pass stacks).
 	 *
 	 * @return Response
 	 */
-	public function executePipeline($pipeline, Request $request, Response $response = null);
+	public function executePipeline(mixed $pipeline, Request $request, ?Response $response = null): Response;
 }

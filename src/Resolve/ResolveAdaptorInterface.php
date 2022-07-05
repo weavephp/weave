@@ -1,10 +1,11 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
 namespace Weave\Resolve;
-
-use Psr\Http\Message\ServerRequestInterface as Request;
 
 /**
  * Weave core resolver used by the Router and Dispatcher classes.
@@ -34,7 +35,7 @@ interface ResolveAdaptorInterface
 	 *
 	 * @return callable Usually some form of callable.
 	 */
-	public function resolve($value, &$resolutionType);
+	public function resolve(string|callable $value, string &$resolutionType): callable;
 
 	/**
 	 * Return the array of remaining dispatch steps with the first step removed (shifted).
@@ -49,5 +50,5 @@ interface ResolveAdaptorInterface
 	 *
 	 * @return array The array of remaining dispatch steps.
 	 */
-	public function shift($value);
+	public function shift(array|string|callable $value): array;
 }

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -16,27 +19,6 @@ use Weave\Dispatch\DispatchAdaptorInterface;
  */
 class Router extends \Weave\Adaptor\Middleware\Base
 {
-	/**
-	 * Resolver interface instance.
-	 *
-	 * @var ResolveAdaptorInterface
-	 */
-	protected $resolver;
-
-	/**
-	 * Dispatcher interface instance.
-	 *
-	 * @var DispatchAdaptorInterface
-	 */
-	protected $dispatcher;
-
-	/**
-	 * The Router adaptor instance.
-	 *
-	 * @var RouterAdaptorInterface
-	 */
-	protected $adaptor;
-
 	/**
 	 * The route provider callable.
 	 *
@@ -61,15 +43,12 @@ class Router extends \Weave\Adaptor\Middleware\Base
 
 	 */
 	public function __construct(
-		RouterAdaptorInterface $adaptor,
+		protected RouterAdaptorInterface $adaptor,
 		callable $routeProvider,
-		ResolveAdaptorInterface $resolver,
-		DispatchAdaptorInterface $dispatcher
+		protected ResolveAdaptorInterface $resolver,
+		protected DispatchAdaptorInterface $dispatcher
 	) {
-		$this->adaptor = $adaptor;
 		$this->routeProvider = $routeProvider;
-		$this->resolver = $resolver;
-		$this->dispatcher = $dispatcher;
 	}
 
 	/**
@@ -79,7 +58,7 @@ class Router extends \Weave\Adaptor\Middleware\Base
 	 *
 	 * @return Response
 	 */
-	protected function run(Request $request)
+	protected function run(Request $request): Response
 	{
 		if (!$this->routesConfigured) {
 			$this->adaptor->configureRoutes($this->routeProvider);
@@ -96,18 +75,20 @@ class Router extends \Weave\Adaptor\Middleware\Base
 		$request = $request->withAttribute('dispatch.handler', $this->resolver->shift($handler));
 
 		// Resolve the handler into something callable
+		$resolutionType = ''; // overwritten in the resolve call below
 		$dispatchable = $this->resolver->resolve($handler, $resolutionType);
 
-		$parameters = [
+		$additionalParameters = [];
+		$response = $this->getResponseObject();
+		if ($response !== null) {
+			$additionalParameters[] = $response;
+		}
+		return $this->dispatcher->dispatch(
 			$dispatchable,
 			$resolutionType,
 			DispatchAdaptorInterface::SOURCE_ROUTER,
-			$request
-		];
-		$response = $this->getResponseObject();
-		if ($response !== null) {
-			$parameters[] = $response;
-		}
-		return $this->dispatcher->dispatch(...$parameters) ?: $this->chain($request);
+			$request,
+			...$additionalParameters
+		) ?: $this->chain($request);
 	}
 }

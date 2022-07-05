@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave core.
  */
@@ -16,11 +19,11 @@ trait Container
 	 * A Pipeline is a stack (usually array) of callables or strings that can be resolved to callables.
 	 * The default pipeline and the only one required to be supported has a pipeline name of null.
 	 *
-	 * @param string $pipelineName The name of the pipeline to return a definition for.
+	 * @param ?string $pipelineName The name of the pipeline to return a definition for.
 	 *
 	 * @return mixed Whatever the chosen Middleware stack uses for a pipeline of middlewares.
 	 */
-	abstract protected function provideMiddlewarePipeline($pipelineName = null);
+	abstract protected function provideMiddlewarePipeline(?string $pipelineName = null): mixed;
 
 	/**
 	 * Setup routes for the Router.
@@ -29,7 +32,7 @@ trait Container
 	 *
 	 * @param mixed $router The object to setup routes against - router specific.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	abstract protected function provideRouteConfiguration($router);
+	abstract protected function provideRouteConfiguration(mixed $router): void;
 }

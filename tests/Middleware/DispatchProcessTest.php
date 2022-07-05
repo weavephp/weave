@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -22,11 +25,14 @@ class DispatchProcessTest extends TestCase
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturn(false);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
+
 		$result = $dispatch->process(
 			$request,
-			new DispatchProcessTestHandleClass()
+			new DispatchProcessTestHandleClass($response)
 		);
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 
 	/**
@@ -43,11 +49,15 @@ class DispatchProcessTest extends TestCase
 		$request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturn(false);
 
+
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
+
 		$result = $dispatch->process(
 			$request,
-			new DispatchProcessTestProcessClass()
+			new DispatchProcessTestProcessClass($response)
 		);
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 
 	/**
@@ -58,11 +68,15 @@ class DispatchProcessTest extends TestCase
 	public function testWithDispatch()
 	{
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
-		$resolveAdaptor->method('shift')->willReturn(false);
-		$resolveAdaptor->method('resolve')->willReturn('wibble');
+		$resolveAdaptor->method('shift')->willReturn([]);
+		$resolveAdaptor->method('resolve')->willReturn(fn () => 'wibble');
+
+
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('ping');
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
-		$dispatchAdaptor->method('dispatch')->willReturn('ping');
+		$dispatchAdaptor->method('dispatch')->willReturn($response);
 
 		$dispatch = new Dispatch($resolveAdaptor, $dispatchAdaptor);
 
@@ -74,7 +88,7 @@ class DispatchProcessTest extends TestCase
 			$request,
 			null
 		);
-		$this->assertEquals('ping', $result);
+		$this->assertEquals('ping', $result->getReasonPhrase());
 	}
 
 	/**
@@ -85,8 +99,8 @@ class DispatchProcessTest extends TestCase
 	public function testDispatchFailNextProcess()
 	{
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
-		$resolveAdaptor->method('shift')->willReturn(false);
-		$resolveAdaptor->method('resolve')->willReturn('wibble');
+		$resolveAdaptor->method('shift')->willReturn([]);
+		$resolveAdaptor->method('resolve')->willReturn(fn () => 'wibble');
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatchAdaptor->method('dispatch')->willReturn(false);
@@ -97,11 +111,14 @@ class DispatchProcessTest extends TestCase
 		$request->method('getAttribute')->willReturn('bar');
 		$request->method('withAttribute')->willReturn($request);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
+
 		$result = $dispatch->process(
 			$request,
-			new DispatchProcessTestProcessClass()
+			new DispatchProcessTestProcessClass($response)
 		);
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 
 	/**
@@ -112,8 +129,8 @@ class DispatchProcessTest extends TestCase
 	public function testDispatchFailNextHandle()
 	{
 		$resolveAdaptor = $this->createMock(\Weave\Resolve\ResolveAdaptorInterface::class);
-		$resolveAdaptor->method('shift')->willReturn(false);
-		$resolveAdaptor->method('resolve')->willReturn('wibble');
+		$resolveAdaptor->method('shift')->willReturn([]);
+		$resolveAdaptor->method('resolve')->willReturn(fn () => 'wibble');
 
 		$dispatchAdaptor = $this->createMock(\Weave\Dispatch\DispatchAdaptorInterface::class);
 		$dispatchAdaptor->method('dispatch')->willReturn(false);
@@ -124,10 +141,13 @@ class DispatchProcessTest extends TestCase
 		$request->method('getAttribute')->willReturn('bar');
 		$request->method('withAttribute')->willReturn($request);
 
+		$response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getReasonPhrase')->willReturn('foo');
+
 		$result = $dispatch->process(
 			$request,
-			new DispatchProcessTestHandleClass()
+			new DispatchProcessTestHandleClass($response)
 		);
-		$this->assertEquals('foo', $result);
+		$this->assertEquals('foo', $result->getReasonPhrase());
 	}
 }

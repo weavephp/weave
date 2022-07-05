@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave Core.
  */
@@ -17,5 +20,5 @@ interface ResponseFactoryInterface
 	 *
 	 * @return Response
 	 */
-	public function newResponse();
+	public function newResponse(): Response;
 }

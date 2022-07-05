@@ -1,3 +1,4 @@
 vendor/
 composer.lock
 analysis.txt
+.phpunit.result.cache

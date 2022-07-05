@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Weave core.
  */
@@ -17,5 +20,5 @@ interface RequestFactoryInterface
 	 *
 	 * @return Request A new Request object based on global data.
 	 */
-	public function newIncomingRequest();
+	public function newIncomingRequest(): Request;
 }
